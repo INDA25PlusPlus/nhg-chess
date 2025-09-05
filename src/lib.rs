@@ -17,8 +17,16 @@ pub fn echo(input: &str) -> String {
     input.to_string()
 }
 
-// chess board stored as 2d array (?); A->H, 1->8. returns 0 if no piece, returns associated string if piece (i.e. Q = queen)
+// chess board stored as 2d array (? enum or bitboard) ; A->H, 1->8. returns 0 if no piece, returns associated string if piece (i.e. Q = queen)
+// string expensive (boo), use enum: i.e. Piece::Queen(Color::White)
 // how to keep track white/black?
+
+// error handling: Results, panics, or player-facing messages.
+// debugging with https://www.chessprogramming.org/Perft
+
+// turn tracker?
+
+// special: castling, en passant, promotion
 
 // >>>> start: player inputs location of piece player wants to move
 pub fn hasPiece(coordinate: &str) -> String {
@@ -36,6 +44,7 @@ pub fn hasPiece(coordinate: &str) -> String {
 
 prv fn checkValidMoves(piece){
     /*
+    generate all valid moves first and THEN filter
     check ruleset for type, i.e. if Q: can move all spaces "up" "down" "right" "left" if 0, if string can go no further etc.
     different fn for each type? 
     return valid moves (as array? how to handle a range, i.e. A1-A5?)
@@ -52,6 +61,7 @@ fn isValidMove {
 
 fn makeMove {
     /*
+    mutable access to board
     register the move into the board array (previous position -> 0; new position is filled with type i.e. 0 -> Q)
     then, check for checkmate (and other states?)    
     */
