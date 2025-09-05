@@ -12,3 +12,7 @@ mod tests {
         assert_eq!(result, 4);
     }
 }
+
+pub fn echo(input: &str) -> String {
+    input.to_string()
+}
