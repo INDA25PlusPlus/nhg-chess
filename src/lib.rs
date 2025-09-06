@@ -1,20 +1,14 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+enum Piece {
+    Pawn(Color),
+    Rook(Color),
+    Knight(Color),
+    Bishop(Color),
+    Queen(Color),
+    King(Color),
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
-
-pub fn echo(input: &str) -> String {
-    input.to_string()
+enum Color {
+    White,
+    Black,
 }
 
 // chess board stored as 2d array (? enum or bitboard) ; A->H, 1->8. returns 0 if no piece, returns associated string if piece (i.e. Q = queen)
