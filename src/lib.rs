@@ -1,4 +1,5 @@
-enum Piece {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Piece {
     Pawn(Color),
     Rook(Color),
     Knight(Color),
@@ -6,21 +7,24 @@ enum Piece {
     Queen(Color),
     King(Color),
 }
-enum Color {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Color {
     White,
     Black,
 }
 
 // bitboard courtesy of https://nereuxofficial.github.io/posts/bitboard-rust/
+// note in deriving: https://doc.rust-lang.org/rust-by-example/trait/derive.html
 #[derive(PartialEq, Eq, PartialOrd, Clone, Copy, Debug, Default, Hash)]
 pub struct BitBoard(pub u64);
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Position{
+    //>>>>  NOTEEEE remove pub after testing
     /// Board for each side
-    bb_sides: [BitBoard; 2],
+    pub bb_sides: [BitBoard; 2],
     // BitBoards for all pieces and each side
-    bb_pieces: [[BitBoard; 6]; 2],
+    pub bb_pieces: [[BitBoard; 6]; 2],
 }
 
 pub struct Sides;
@@ -32,8 +36,8 @@ impl Sides {
 pub struct Pieces;
 impl Pieces{
     pub const PAWN: usize = 0;
-    pub const BISHOP: usize = 1;
-    pub const KNIGHT: usize = 2;
+    pub const KNIGHT: usize = 1;
+    pub const BISHOP: usize = 2;
     pub const ROOK: usize = 3;
     pub const QUEEN: usize = 4;
     pub const KING: usize = 5;
@@ -50,27 +54,51 @@ impl Pieces{
 
 // special: castling, en passant, promotion
 
-int turn = 0;
-int currentPlayer: 0; // 0 = white, 1 = black
+/* int turn = 0;
+int currentPlayer: 0; // 0 = white, 1 = black */
 
+// note!!! A1 = 0, H8 = 63 (coord -> bit-index oc vice verse converter behövs)
 // >>>> start: player inputs location of piece player wants to move
-pub fn hasPiece(coordinate: &str) -> String {
-    // playerTracker()
-    // check the two arrays
 
-    // if piece -> check piece ownership vs currentPlayer. if no -> failstate
+// nte: snake_case for functions.
 
-    /* if String:
-        piece = string 
-        checkValidMoves(piece);
-    if 0: return "coordinate has no piece. please select another coordinate."
-    if other: failstate */
+/* bitmask functionality:
+piece bitboard: 0b0001000000001
+mask for D4:    0b0001000000000
+AND result:     0b0001000000000 =/= 0 -> square has a piece */
 
-    // return true / false
-    // if true: checkValidMoves
+pub fn get_piece_at(position: &Position, square: u8) -> Option<Piece> {
+    let mask = 1u64 << square; // "<<" left shift. mask with only bit for target square set, i.e. square = 3 -> mask = 0b1000, 3 bit shifts
+    println!("mask: {:064b}", mask);
+
+    for side in [Sides::WHITE, Sides::BLACK] {
+        for piece_type in 0..6 {
+            println!("position in board: {:064b}", position.bb_pieces[side][piece_type].0);
+            if (position.bb_pieces[side][piece_type].0 & mask) != 0 {
+                let color = if side == Sides::WHITE {  
+                    Color::White
+                }else {
+                    Color::Black
+                };
+
+                let piece = match piece_type{ // order is important!!
+                    Pieces::PAWN => Piece::Pawn(color),
+                    Pieces::KNIGHT => Piece::Knight(color),
+                    Pieces::BISHOP => Piece::Bishop(color),
+                    Pieces::ROOK => Piece::Rook(color),
+                    Pieces::QUEEN => Piece::Queen(color),
+                    Pieces::KING => Piece::King(color),
+                    _ => unreachable!(),
+                };
+
+                return Some(piece);
+            }
+        }
+    }
+    None // since Option
 }
 
-pub fn playerTracker(){
+/* pub fn playerTracker(){
     /* 
     if (turn % 2 == 0) { // even
         currentPlayer = black; (notated as 1?)
@@ -114,4 +142,4 @@ fn isChecked {
     check board 
     states for no check/checked/checkmate
      */
-}
+} */

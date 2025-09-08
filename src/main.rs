@@ -1,8 +1,16 @@
 // name of library is defined in cargo.toml
-use nhg_chess::echo;
-
+use chess::*;
 fn main() {
-    let input = "hello, world!";
-    let output = echo(input);
-    println!("{}", output);
+    let mut position = Position {
+        bb_sides: [BitBoard(0), BitBoard(0)], //initalize bitboard
+        bb_pieces: [[BitBoard(0); 6]; 2], 
+    };
+
+    position.bb_pieces[Sides::WHITE][Pieces::BISHOP] = BitBoard(1 << 0); 
+    position.bb_pieces[Sides::BLACK][Pieces::QUEEN] = BitBoard(1 << 3); 
+
+    match get_piece_at(&position, 0) {
+        Some(piece) => println!("Found piece: {:?}", piece),
+        None => println!("No piece here"),
+    }
 }

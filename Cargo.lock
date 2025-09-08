@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "nhg_chess"
+name = "chess"
 version = "0.1.0"
