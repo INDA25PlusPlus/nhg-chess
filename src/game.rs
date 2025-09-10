@@ -1,4 +1,4 @@
-use crate::piece::Color;
+use crate::piece::{Piece, Color};
 use crate::position::Position;
 
 pub struct Game {
@@ -23,6 +23,27 @@ impl Game {
             Color::White
         } else{
             Color::Black
+        }
+    }
+
+    // Result är "return" https://doc.rust-lang.org/std/result/
+    pub fn select_piece(&self, piece: Piece) -> Result<Piece, &'static str> {
+        let current = self.player_tracker();
+
+        // simplification? vv split up? 
+        match piece {
+            Piece::Pawn(c)
+            | Piece::Rook(c)
+            | Piece::Knight(c)
+            | Piece::Bishop(c)
+            | Piece::Queen(c)
+            | Piece::King(c) => {
+                if c == current {
+                    Ok(piece)
+                } else {
+                    Err("that piece does not belong to you poopy boy >:I")
+                }
+            }
         }
     }
 }
