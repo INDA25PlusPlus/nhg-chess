@@ -6,8 +6,15 @@ fn main() {
         bb_pieces: [[BitBoard(0); 6]; 2], 
     };
 
-    position.bb_pieces[Sides::WHITE][Pieces::BISHOP] = BitBoard(1 << 0); 
+    position.bb_pieces[Sides::WHITE][Pieces::PAWN] = BitBoard(1 << 0); 
     position.bb_pieces[Sides::BLACK][Pieces::QUEEN] = BitBoard(1 << 3); 
+
+    let mut game = Game::new(position);
+    println!("Turn {}: {:?}", game.turn, game.player_tracker());
+    game.turn_tracker();
+    println!("Turn {}: {:?}", game.turn, game.player_tracker());
+    game.turn_tracker();
+    println!("Turn {}: {:?}", game.turn, game.player_tracker());
 
     match get_piece_at(&position, 0) {
         Some(piece) => println!("Found piece: {:?}", piece),

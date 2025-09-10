@@ -1,9 +1,8 @@
-// position.rs
-
 use crate::bitboard::BitBoard;
 use crate::piece::{Piece, Color};
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+// is copy needed? idk. added for debug
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub struct Position{
     //>>>>  NOTEEEE remove pub after testing
     /// Board for each side
@@ -44,7 +43,6 @@ pub fn get_piece_at(position: &Position, square: u8) -> Option<Piece> {
     println!("spotlight: {:064b}", spotlight);
 
     for side in [Sides::WHITE, Sides::BLACK] {
-        println!("side:", side);
         for piece_type in 0..6 {
             println!("position in board: {:064b}", position.bb_pieces[side][piece_type].0);
             if (position.bb_pieces[side][piece_type].0 & spotlight) != 0 {
