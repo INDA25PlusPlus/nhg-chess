@@ -1,15 +1,16 @@
 use crate::piece::{Piece, Color};
-use crate::position::Position;
+use crate::position::{Position, get_piece_at};
 
 pub struct Game {
     pub position: Position,
     pub turn: u32,
+    pub selected: Option<(Piece, usize)>
 }
 
 impl Game {
     // constructor 
     pub fn new(position: Position) -> Self {
-        Game { position, turn: 1 }
+        Game { position, turn: 1, selected: None }
     }
     
     // "mut self" -> method takes ownership of the instance and allows it to be mutated within the method.  (borrow mut)
@@ -26,11 +27,9 @@ impl Game {
         }
     }
 
-    // Result är "return" https://doc.rust-lang.org/std/result/
-    pub fn select_piece(&self, piece: Piece) -> Result<Piece, &'static str> {
-        let current = self.player_tracker();
+    pub fn color_check(&self, piece: Piece) -> Result<Piece, &'static str> {
+        let current_color = self.player_tracker();
 
-        // simplification? vv split up? 
         match piece {
             Piece::Pawn(c)
             | Piece::Rook(c)
@@ -38,12 +37,28 @@ impl Game {
             | Piece::Bishop(c)
             | Piece::Queen(c)
             | Piece::King(c) => {
-                if c == current {
+                if c == current_color {
                     Ok(piece)
                 } else {
                     Err("that piece does not belong to you poopy boy >:I")
                 }
             }
+        }
+    }
+
+    // Result är "return" https://doc.rust-lang.org/std/result/
+    pub fn select_piece(&mut self, square: u8) -> Result<Piece, &'static str> {
+        match get_piece_at(&self.position, square) {
+            Some(piece) => {
+                if piece.color() as Color != self.player_tracker() {
+                    return Err("You can only select your own pieces");
+                }
+                // casting?? ?!?!?! means failure.... feels like this will become problematic...
+                self.selected = Some((piece, square as usize));
+                println!("selected var: {:?}", self.selected);
+                Ok(piece)
+            }
+            None => Err("No piece here"),
         }
     }
 }

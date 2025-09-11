@@ -20,13 +20,8 @@ fn main() {
     println!("Turn {}: {:?}", game.turn, game.player_tracker()); */
 
     // options: https://doc.rust-lang.org/std/option/ 
-    match get_piece_at(&game.position, 3) {
-    Some(piece) => match game.select_piece(piece) {
-        Ok(selected) => println!("There's a piece! You selected: {:?}", selected),
-        Err(msg) => println!("There's a piece, but {}", msg),
-    },
-    None => println!("No piece here"),
-    
-}
-
+    match game.select_piece(3) {
+        Ok(piece) => println!("You selected: {:?}", piece),
+        Err(msg) => println!("Selection failed: {}", msg),
+    }
 }
