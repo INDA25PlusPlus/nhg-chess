@@ -4,7 +4,7 @@ use crate::position::{Position, get_piece_at};
 pub struct Game {
     pub position: Position,
     pub turn: u32,
-    pub selected: Option<(Piece, usize)>
+    pub selected: Option<(Piece, u8)>
 }
 
 impl Game {
@@ -50,11 +50,10 @@ impl Game {
     pub fn select_piece(&mut self, square: u8) -> Result<Piece, &'static str> {
         match get_piece_at(&self.position, square) {
             Some(piece) => {
-                if piece.color() as Color != self.player_tracker() {
+                if piece.color() != self.player_tracker() {
                     return Err("You can only select your own pieces");
                 }
-                // casting?? ?!?!?! means failure.... feels like this will become problematic...
-                self.selected = Some((piece, square as usize));
+                self.selected = Some((piece, square));
                 println!("selected var: {:?}", self.selected);
                 Ok(piece)
             }

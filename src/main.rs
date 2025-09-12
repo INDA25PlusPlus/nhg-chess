@@ -1,5 +1,6 @@
 // name of library is defined in cargo.toml
 use chess::*;
+
 fn main() {
     let mut position = Position {
         bb_sides: [BitBoard(0), BitBoard(0)], //initalize bitboard

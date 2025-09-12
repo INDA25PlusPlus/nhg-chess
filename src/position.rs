@@ -27,12 +27,6 @@ impl Pieces{
     pub const KING: usize = 5;
 }
 
-// example: let white_queens: BitBoard = position.bb_pieces[Sides::WHITE][Pieces::QUEEN]; 
-
-// chess board stored as 2d array (? enum or bitboard) ; A->H, 1->8. returns 0 if no piece, returns associated string if piece (i.e. Q = queen)
-// string expensive (boo), use enum: i.e. Piece::Queen(Color::White)
-// how to keep track white/black?
-
 /* bitmask functionality:
 piece bitboard:         0b0001000000001
 "spotlight"" for D4:    0b0001000000000
