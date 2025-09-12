@@ -17,3 +17,5 @@ tester i rust:
 
 automatiska teser:
 - github actions; kan synkas med PR.
+
+https://www.youtube.com/watch?v=MqC3tudPH6w

@@ -2,12 +2,15 @@ use crate::bitboard::BitBoard;
 use crate::piece::{Piece, Color};
 
 // is copy needed? idk. added for debug
+
+/// Represents the "depth" or "layers" of the bitboard. A "side" then is the color (white side, black side).
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub struct Position{
-    //>>>>  NOTEEEE remove pub after testing
-    /// Board for each side
+    //>>>>  NOTEEEE remove pub after testingg (???)
+
+    /// Shows all the occupied positions given a color, irregardless of piece type. (A queen is represented the same as a pawn)
     pub bb_sides: [BitBoard; 2],
-    // BitBoards for all pieces and each side
+    /// Shows the positions of each piece-color combination, i.e. the location of White Rook (if any).
     pub bb_pieces: [[BitBoard; 6]; 2],
 }
 
@@ -27,11 +30,21 @@ impl Pieces{
     pub const KING: usize = 5;
 }
 
-/* bitmask functionality:
-piece bitboard:         0b0001000000001
-"spotlight"" for D4:    0b0001000000000
-AND result:             0b0001000000000 =/= 0 -> square has a piece */
+/*
+Example Functionality (Bitmasking): 
+Piece BitBoard:         0b0001000000001
+"Spotlight"" for D4:    0b0001000000000
+AND result:             0b0001000000000 =! 0    -> square has a piece 
+*/
 
+/// Gets the existence, type and color of a piece given a position expressed as a bit-index (0-63), where 0 is A1 and 63 is H8.
+/// Expresses the desired bit-index as a hex (mask). The mask (called "spotlight") is compared to the BitBoards of the pieces for each color and type using AND
+/// If the mask matches one of the boards (bb_pieces), it matches the equivalent BitBoard to associated Piece. 
+/// 
+/// Example Functionality (Bitmasking): \
+/// Piece BitBoard:         0b0001000000001\
+/// "Spotlight"" for D4:    0b0001000000000\
+/// AND result:             0b0001000000000 =! 0    -> square has a piece 
 pub fn get_piece_at(position: &Position, square: u8) -> Option<Piece> {
     let spotlight = 1u64 << square; 
     println!("spotlight: {:064b}", spotlight);

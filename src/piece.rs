@@ -14,6 +14,7 @@ pub enum Color {
     Black,
 }
 
+/// "Converts" Piece to Color by matching it with a color. Returns Color.
 impl Piece {
     pub fn color(&self) -> Color {
         match self {
