@@ -32,6 +32,22 @@ Bitboard set-up:
     a  b  c  d  e  f  g  h
 */
 
+/*
+Pieces with normal moves only
+- Knight
+- Bishop
+- Rook
+- Queen
+
+Pieces with special moves
+- Pawn
+Promotion: when it reaches the last rank (rank 8 for White, rank 1 for Black).
+En passant: capturing a pawn that just moved two squares.
+
+- King
+Castling: moves two squares left or right if rook + king haven’t moved, no check along the path.
+*/
+
 pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     // see knight-offset.jpg
     let knight_offsets: [i8; 8] = [17, 15, 10, 6, -17, -15, -10, -6];
@@ -85,6 +101,21 @@ pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
         });
     }
     moves
+}
+
+pub fn valid_bishop_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
+    let mut moves = Vec::new();
+    
+    let from_row = (from / 8) as i8;
+    let from_col = (from % 8) as i8;
+
+    let bishop_offets:
+    /*
+    iterator checking for +7i (diaag up left) +9i (diag up right) -7i (diag down right) -9i (diag down left) until there is a "block" (same color) or an enemy (move to that position but no furhter)
+    how to best represent this range of possibilities?
+     */
+
+
 }
 
 pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
