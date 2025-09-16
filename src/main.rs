@@ -3,21 +3,33 @@ use chess::*;
 
 fn main() {
     let mut position = Position {
-        bb_sides: [BitBoard(0), BitBoard(0)], //initalize bitboard
+        bb_sides: [BitBoard(0), BitBoard(1)], //initalize bitboard
         bb_pieces: [[BitBoard(0); 6]; 2], 
     };
 
     // white pawn placed on 0
     // position.bb_pieces[Sides::WHITE][Pieces::PAWN] = BitBoard(1 << 0); 
     // black KNIGHT placed on 3
-    let square: u8 = 27;
-    position.bb_pieces[Sides::BLACK][Pieces::KNIGHT] = BitBoard(1 << square); 
+    let square: u8 = 8;
+    position.bb_pieces[Sides::WHITE][Pieces::PAWN] = BitBoard(1 << square); 
+    position.bb_pieces[Sides::BLACK][Pieces::PAWN] = BitBoard(1 << 17); 
+
+
+    // bb_side occupancy (all white, all black) updated including all white/black positions 
+    // https://rust-guide.com/en/documentation/iterators/fold -> reduce the elements of an iterator into a single value. same/similar to reduce() in java
+    // should be moved inside the lib (eventually) -- into initalize_board function?
+    position.bb_sides[Sides::WHITE].0 = position.bb_pieces[Sides::WHITE]
+    .iter() 
+    .fold(0u64, |acc, bb| acc | bb.0);
+    position.bb_sides[Sides::BLACK].0 = position.bb_pieces[Sides::BLACK]
+    .iter()
+    .fold(0u64, |acc, bb| acc | bb.0);
 
     let mut game = Game::new(position);
     println!("Starting Color: {:?}", game.player_tracker());
     println!("Turn {}: {:?}", game.turn, game.player_tracker());
-    game.turn_tracker();
-    println!("Turn {}: {:?}", game.turn, game.player_tracker());
+    /*game.turn_tracker();
+    println!("Turn {}: {:?}", game.turn, game.player_tracker());*/
     /* game.turn_tracker();
     println!("Turn {}: {:?}", game.turn, game.player_tracker()); */
 

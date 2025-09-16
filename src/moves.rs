@@ -11,7 +11,7 @@ pub struct Move {
 pub fn valid_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     match piece {
         Piece::Knight(_) => valid_knight_moves(from, piece, position),
-        Piece::Pawn(_) => todo!("Implement pawn moves"),
+        Piece::Pawn(_) => valid_pawn_moves(from, piece, position),
         Piece::Bishop(_) => todo!("Implement bishop moves"),
         Piece::Rook(_) => todo!("Implement rook moves"),
         Piece::Queen(_) => todo!("Implement queen moves"),
@@ -57,7 +57,7 @@ pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
         if (from_column - target_column).abs() > 2 || (from_row - target_row).abs() > 2 {
             continue;
         }
-        
+
         let spotlight = 1u64 << target;
 
         // cannot land on own piece
@@ -86,4 +86,60 @@ pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
     }
     moves
 }
+
+pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
+    let mut moves = Vec::new();
+
+    let (dir, start_row, _side_index, enemy_index) = match piece {
+        Piece::Pawn(Color::White) => (8, 1, 0, 1), // white moves up
+        Piece::Pawn(Color::Black) => (-8, 6, 1, 0), // black moves down
+        _ => return moves, 
+    };
+
+    // reducing this repetition?
+    let from_row = (from / 8) as i8;
+    let from_col = (from % 8) as i8;
+
+    let forward1 = from as i8 + dir;
+    if forward1 >= 0 && forward1 < 64 {
+        let spotlight = 1u64 << forward1;
+        if (position.bb_sides[0].0 & spotlight == 0) && (position.bb_sides[1].0 & spotlight == 0) {
+            moves.push(Move { from, to: forward1 as u8, piece });
+
+            // 2-squares forward from starting row
+            if from_row == start_row {
+                let forward2 = forward1 + dir; // i.e. dir+dir
+                if forward2 >= 0 && forward2 < 64 {
+                    let spotlight2 = 1u64 << forward2;
+                    if (position.bb_sides[0].0 & spotlight2 == 0) && (position.bb_sides[1].0 & spotlight2 == 0) {
+                        moves.push(Move { from, to: forward2 as u8, piece });
+                    }
+                }
+            }
+        }
+    }
+    // Captures
+    for &diag in &[dir - 1, dir + 1] {
+        let target = from as i8 + diag;
+        if target < 0 || target >= 64 {
+            continue;
+        }
+
+        let target_col = (target % 8) as i8;
+        // cannot wrap around horizontally
+        if (target_col - from_col).abs() != 1 {
+            continue;
+        }
+
+        let spotlight = 1u64 << target;
+        println!("Enemy spotlight: {:064b}", spotlight);
+        if (position.bb_sides[enemy_index].0 & spotlight) != 0 {
+            println!("There's an enemy!! aaa");
+            moves.push(Move { from, to: target as u8, piece });
+        }
+        // indicating in move that move is a capture?
+    }
+    moves
+}
+
 
