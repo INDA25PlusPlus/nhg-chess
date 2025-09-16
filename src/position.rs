@@ -47,11 +47,11 @@ AND result:             0b0001000000000 =! 0    -> square has a piece
 /// AND result:             0b0001000000000 =! 0    -> square has a piece 
 pub fn get_piece_at(position: &Position, square: u8) -> Option<Piece> {
     let spotlight = 1u64 << square; 
-    println!("spotlight: {:064b}", spotlight);
+    //println!("spotlight: {:064b}", spotlight);
 
     for side in [Sides::WHITE, Sides::BLACK] {
         for piece_type in 0..6 {
-            println!("position in board: {:064b}", position.bb_pieces[side][piece_type].0);
+            //println!("position in board: {:064b}", position.bb_pieces[side][piece_type].0);
             if (position.bb_pieces[side][piece_type].0 & spotlight) != 0 {
                 let color = if side == Sides::WHITE {  
                     Color::White

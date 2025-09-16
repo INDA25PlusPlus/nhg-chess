@@ -10,11 +10,11 @@ fn main() {
     // white pawn placed on 0
     // position.bb_pieces[Sides::WHITE][Pieces::PAWN] = BitBoard(1 << 0); 
     // black KNIGHT placed on 3
-    let square: u8 = 8;
-    position.bb_pieces[Sides::WHITE][Pieces::PAWN] = BitBoard(1 << square); 
-    position.bb_pieces[Sides::BLACK][Pieces::PAWN] = BitBoard(1 << 17); 
-
-
+    let square: u8 = 27;
+    position.bb_pieces[Sides::WHITE][Pieces::ROOK] = BitBoard(1 << square);  // fyi this overwrites the entirety of WHITE ROOK 
+    position.bb_pieces[Sides::BLACK][Pieces::PAWN] = 
+        BitBoard((1 << 25) | (1 << 35) | (1 << 29) | (1 << 19));
+    
     // bb_side occupancy (all white, all black) updated including all white/black positions 
     // https://rust-guide.com/en/documentation/iterators/fold -> reduce the elements of an iterator into a single value. same/similar to reduce() in java
     // should be moved inside the lib (eventually) -- into initalize_board function?

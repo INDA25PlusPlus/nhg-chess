@@ -12,10 +12,29 @@ pub fn valid_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     match piece {
         Piece::Knight(_) => valid_knight_moves(from, piece, position),
         Piece::Pawn(_) => valid_pawn_moves(from, piece, position),
-        Piece::Bishop(_) => todo!("Implement bishop moves"),
-        Piece::Rook(_) => todo!("Implement rook moves"),
+        Piece::Bishop(_) => valid_bishop_moves(from, piece, position),
+        Piece::Rook(_) => valid_rook_moves(from, piece, position),
         Piece::Queen(_) => todo!("Implement queen moves"),
         Piece::King(_) => todo!("Implement king moves"),
+    }
+}
+
+/// Get index of BitBoard side (bb_sides), where 0 indicates White, and 1 indicates Black.
+pub fn piece_indexes(piece: Piece) -> (usize, usize) {
+    match piece {
+        Piece::Bishop(Color::White)
+        | Piece::Knight(Color::White)
+        | Piece::Pawn(Color::White)
+        | Piece::Rook(Color::White)
+        | Piece::Queen(Color::White)
+        | Piece::King(Color::White) => (0, 1),
+
+        Piece::Bishop(Color::Black)
+        | Piece::Knight(Color::Black)
+        | Piece::Pawn(Color::Black)
+        | Piece::Rook(Color::Black)
+        | Piece::Queen(Color::Black)
+        | Piece::King(Color::Black) => (1, 0),
     }
 }
 
@@ -34,13 +53,13 @@ Bitboard set-up:
 
 /*
 Pieces with normal moves only
-- Knight
-- Bishop
+- Knight X
+- Bishop X
 - Rook
 - Queen
 
 Pieces with special moves
-- Pawn
+- Pawn !
 Promotion: when it reaches the last rank (rank 8 for White, rank 1 for Black).
 En passant: capturing a pawn that just moved two squares.
 
@@ -103,29 +122,97 @@ pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
     moves
 }
 
+
+// representing a large range of moves such as this? 
 pub fn valid_bishop_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     let mut moves = Vec::new();
+
+    let (own_index, enemy_index) = piece_indexes(piece);
     
-    let from_row = (from / 8) as i8;
-    let from_col = (from % 8) as i8;
+    let directions: [i8; 4] = [7, 9, -7, -9];
+    for &dir in &directions {
+        let mut target = from as i8;
 
-    let bishop_offets:
-    /*
-    iterator checking for +7i (diaag up left) +9i (diag up right) -7i (diag down right) -9i (diag down left) until there is a "block" (same color) or an enemy (move to that position but no furhter)
-    how to best represent this range of possibilities?
-     */
+        loop {
+            target += dir;
+            if target < 0 || target >= 64 {
+                break;
+            }
 
+            let target_row = target / 8;
+            let target_col = target % 8;
+            let from_row = from as i8 / 8;
+            let from_col = from as i8 % 8;
 
+            if (target_row - from_row).abs() != (target_col - from_col).abs() {
+                break; // not diagonal anymore → wrapped
+            }
+
+            let spotlight = 1u64 << target;
+            // own piece? stop
+            if (position.bb_sides[own_index].0 & spotlight) != 0 {
+                break;
+            }
+            // enemy piece? push move, then stop
+            if (position.bb_sides[enemy_index].0 & spotlight) != 0 {
+                moves.push(Move { from, to: target as u8, piece });
+                break;
+            }
+            moves.push(Move { from, to: target as u8, piece });
+        }
+    }
+    moves
+}
+
+pub fn valid_rook_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
+    let mut moves = Vec::new();
+
+    let (own_index, enemy_index) = piece_indexes(piece);
+    
+    let directions: [i8; 4] = [1, 8, -1, -8];
+    for &dir in &directions {
+        let mut target = from as i8;
+
+        loop {
+            target += dir;
+            if target < 0 || target >= 64 {
+                break;
+            }
+
+            let target_row = target / 8;
+            let target_col = target % 8;
+            let from_row = from as i8 / 8;
+            let from_col = from as i8 % 8;
+
+            if target_row != from_row && target_col != from_col {
+                break;
+            }
+            let spotlight = 1u64 << target;
+            // own piece? stop
+            if (position.bb_sides[own_index].0 & spotlight) != 0 {
+                break;
+            }
+            // enemy piece? push move, then stop
+            if (position.bb_sides[enemy_index].0 & spotlight) != 0 {
+                moves.push(Move { from, to: target as u8, piece });
+                break;
+            }
+            moves.push(Move { from, to: target as u8, piece });
+        }
+    }
+    moves
 }
 
 pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     let mut moves = Vec::new();
 
-    let (dir, start_row, _side_index, enemy_index) = match piece {
-        Piece::Pawn(Color::White) => (8, 1, 0, 1), // white moves up
-        Piece::Pawn(Color::Black) => (-8, 6, 1, 0), // black moves down
+    let (dir, start_row) = match piece {
+        Piece::Pawn(Color::White) => (8, 1), // white moves up
+        Piece::Pawn(Color::Black) => (-8, 6), // black moves down
         _ => return moves, 
     };
+    // own_index unused
+    let (_own_index, enemy_index) = piece_indexes(piece);
 
     // reducing this repetition?
     let from_row = (from / 8) as i8;
