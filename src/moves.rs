@@ -14,8 +14,8 @@ pub fn valid_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
         Piece::Pawn(_) => valid_pawn_moves(from, piece, position),
         Piece::Bishop(_) => valid_bishop_moves(from, piece, position),
         Piece::Rook(_) => valid_rook_moves(from, piece, position),
-        Piece::Queen(_) => todo!("Implement queen moves"),
-        Piece::King(_) => todo!("Implement king moves"),
+        Piece::Queen(_) => valid_queen_moves(from, piece, position),
+        Piece::King(_) => valid_king_moves(from, piece, position)
     }
 }
 
@@ -55,15 +55,15 @@ Bitboard set-up:
 Pieces with normal moves only
 - Knight X
 - Bishop X
-- Rook
-- Queen
+- Rook X 
+- Queen X
 
 Pieces with special moves
 - Pawn !
 Promotion: when it reaches the last rank (rank 8 for White, rank 1 for Black).
 En passant: capturing a pawn that just moved two squares.
 
-- King
+- King !
 Castling: moves two squares left or right if rook + king haven’t moved, no check along the path.
 */
 
@@ -95,7 +95,7 @@ pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
 
         let spotlight = 1u64 << target;
 
-        // cannot land on own piece
+        // cannot land on friendly piece
         // move this function elsewhere - MERGE WITH CHECK_COLOR
         let side_index = match piece {
             Piece::Pawn(c)
@@ -122,12 +122,11 @@ pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
     moves
 }
 
-
-// representing a large range of moves such as this? 
+// representing a large RANGE of moves such as this? 
 pub fn valid_bishop_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     let mut moves = Vec::new();
 
-    let (own_index, enemy_index) = piece_indexes(piece);
+    let (friendly_index, enemy_index) = piece_indexes(piece);
     
     let directions: [i8; 4] = [7, 9, -7, -9];
     for &dir in &directions {
@@ -149,8 +148,8 @@ pub fn valid_bishop_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
             }
 
             let spotlight = 1u64 << target;
-            // own piece? stop
-            if (position.bb_sides[own_index].0 & spotlight) != 0 {
+            // friendly piece? stop
+            if (position.bb_sides[friendly_index].0 & spotlight) != 0 {
                 break;
             }
             // enemy piece? push move, then stop
@@ -167,7 +166,7 @@ pub fn valid_bishop_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
 pub fn valid_rook_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     let mut moves = Vec::new();
 
-    let (own_index, enemy_index) = piece_indexes(piece);
+    let (friendly_index, enemy_index) = piece_indexes(piece);
     
     let directions: [i8; 4] = [1, 8, -1, -8];
     for &dir in &directions {
@@ -188,11 +187,11 @@ pub fn valid_rook_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
                 break;
             }
             let spotlight = 1u64 << target;
-            // own piece? stop
-            if (position.bb_sides[own_index].0 & spotlight) != 0 {
+            // friendly piece: stop
+            if (position.bb_sides[friendly_index].0 & spotlight) != 0 {
                 break;
             }
-            // enemy piece? push move, then stop
+            // enemy piece: push move, then stop
             if (position.bb_sides[enemy_index].0 & spotlight) != 0 {
                 moves.push(Move { from, to: target as u8, piece });
                 break;
@@ -200,6 +199,12 @@ pub fn valid_rook_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
             moves.push(Move { from, to: target as u8, piece });
         }
     }
+    moves
+}
+
+pub fn valid_queen_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
+    let mut moves = valid_rook_moves(from, piece, position);
+    moves.extend(valid_bishop_moves(from, piece, position));
     moves
 }
 
@@ -211,8 +216,7 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
         Piece::Pawn(Color::Black) => (-8, 6), // black moves down
         _ => return moves, 
     };
-    // own_index unused
-    let (_own_index, enemy_index) = piece_indexes(piece);
+    let (_friendly_index, enemy_index) = piece_indexes(piece);
 
     // reducing this repetition?
     let from_row = (from / 8) as i8;
@@ -260,4 +264,51 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
     moves
 }
 
+pub fn valid_king_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
+    let mut moves = Vec::new();
 
+    let (own_index, _enemy_index) = piece_indexes(piece);
+    let directions: [i8; 8] = [1, -1, 8, -8, 7, -7, 9, -9];
+
+    let from_row = (from / 8) as i8;
+    let from_col = (from % 8) as i8;
+
+    for &dir in &directions {
+        let target = from as i8 + dir;
+
+        if target < 0 || target >= 64 {
+            continue;
+        }
+
+        let target_row = target / 8;
+        let target_col = target % 8;
+
+        if dir == 1 || dir == -1 {
+            // must stay in same row
+            if target_row != from_row {
+                continue;
+            }
+        } else if dir == 7 || dir == -7 || dir == 9 || dir == -9 {
+            // must stay diagonal
+            if (target_row - from_row).abs() != (target_col - from_col).abs() {
+                continue;
+            }
+        }
+
+        let spotlight = 1u64 << target;
+
+        // cannot land on own piece
+        if (position.bb_sides[own_index].0 & spotlight) != 0 {
+            continue;
+        }
+
+        // enemy or empty: both valid
+        moves.push(Move {
+            from,
+            to: target as u8,
+            piece,
+        });
+    }
+
+    moves
+}
