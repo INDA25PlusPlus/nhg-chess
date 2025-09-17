@@ -7,9 +7,9 @@ fn main() {
         bb_sides: [BitBoard(0), BitBoard(1)], //initalize bitboard
         bb_pieces: [[BitBoard(0); 6]; 2],
     };
-    let square: u8 = 8;
-    position.bb_pieces[Sides::WHITE][Pieces::PAWN] = BitBoard(1 << square); // fyi this overwrites the entirety of WHITE ROOK board
-    position.bb_pieces[Sides::BLACK][Pieces::PAWN] = BitBoard((1 << 17) | (1 << 35));
+    let square: u8 = 9;
+    position.bb_pieces[Sides::WHITE][Pieces::KNIGHT] = BitBoard(1 << square); // fyi this overwrites the entirety of WHITE ROOK board
+    position.bb_pieces[Sides::BLACK][Pieces::KING] = BitBoard(1 << 36);
 
     position.bb_sides[Sides::WHITE].0 = position.bb_pieces[Sides::WHITE]
         .iter()
@@ -22,9 +22,7 @@ fn main() {
     let mut game = Game::new(position);
     
     let move_sequence = vec![
-        (8, 2),  // white: select square 8, pick move 0 from moves Vec
-        (35, 0), //black
-        (17, 0), // white
+        (9, 0),  //white
     ];
 
     println!("Before move:");
@@ -93,7 +91,6 @@ fn execute_move(game: &mut Game, square: u8, move_index: usize) {
         }
         Err(msg) => println!("Selection failed: {}", msg),
     }
-
     println!("After move:");
     print_debug_board(&game.position);
 }

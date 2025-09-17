@@ -1,5 +1,5 @@
 use crate::piece::{Color, Piece};
-use crate::position::Position;
+use crate::position::{Position};
 use crate::special_moves::{is_pawn_promotion, valid_pawn_promotions};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -106,7 +106,7 @@ pub fn valid_bishop_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
 
         loop {
             target += dir;
-            if target < 0 || target >= 64 {
+            if target < 0 || target >= 63 {
                 break;
             }
 
@@ -154,7 +154,7 @@ pub fn valid_rook_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
 
         loop {
             target += dir;
-            if target < 0 || target >= 64 {
+            if target < 0 || target >= 63 {
                 break;
             }
 
@@ -247,7 +247,7 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
     // Captures
     for &diag in &[dir - 1, dir + 1] {
         let target = from as i8 + diag;
-        if target < 0 || target >= 64 {
+        if target < 0 || target >= 63 {
             continue;
         }
 
@@ -294,7 +294,7 @@ pub fn valid_king_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
     for &dir in &directions {
         let target = from as i8 + dir;
 
-        if target < 0 || target >= 64 {
+        if target < 0 || target >= 63 {
             continue;
         }
 
