@@ -4,6 +4,7 @@ pub mod bitboard;
 pub mod position;
 pub mod game;
 pub mod moves;
+pub mod special_moves;
 
 // re-exports for easier access from outside
 pub use piece::{Piece, Color};

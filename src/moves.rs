@@ -1,5 +1,6 @@
 use crate::piece::{Piece, Color};
 use crate::position::Position;
+use crate::special_moves::is_pawn_promotion;
 
 #[derive(Debug)]
 pub struct Move {
@@ -211,7 +212,7 @@ pub fn valid_queen_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mov
 pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     let mut moves = Vec::new();
 
-    let (dir, start_row) = match piece {
+    let (dir, start_row ) = match piece {
         Piece::Pawn(Color::White) => (8, 1), // white moves up
         Piece::Pawn(Color::Black) => (-8, 6), // black moves down
         _ => return moves, 
@@ -226,6 +227,9 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
     if forward1 >= 0 && forward1 < 64 {
         let spotlight = 1u64 << forward1;
         if (position.bb_sides[0].0 & spotlight == 0) && (position.bb_sides[1].0 & spotlight == 0) {
+            if is_pawn_promotion(forward1 as u8, piece){
+                println!(">> you can be promoted if you step forth!!");
+            }
             moves.push(Move { from, to: forward1 as u8, piece });
 
             // 2-squares forward from starting row
