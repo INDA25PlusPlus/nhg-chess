@@ -2,7 +2,7 @@ use crate::piece::{Color, Piece};
 use crate::position::Position;
 use crate::special_moves::{is_pawn_promotion, valid_pawn_promotions};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Move {
     pub from: u8,
     pub to: u8,
@@ -38,35 +38,6 @@ pub fn piece_indexes(piece: Piece) -> (usize, usize) {
         | Piece::King(Color::Black) => (1, 0),
     }
 }
-
-/*
-Bitboard set-up:
-8 | 56 57 58 59 60 61 62 63
-7 | 48 49 50 51 52 53 54 55
-6 | 40 41 42 43 44 45 46 47
-5 | 32 33 34 35 36 37 38 39
-4 | 24 25 26 27 28 29 30 31
-3 | 16 17 18 19 20 21 22 23
-2 |  8  9 10 11 12 13 14 15
-1 |  0  1  2  3  4  5  6  7
-    a  b  c  d  e  f  g  h
-*/
-
-/*
-Pieces with normal moves only
-- Knight X
-- Bishop X
-- Rook X
-- Queen X
-
-Pieces with special moves
-- Pawn !
-Promotion: when it reaches the last rank (rank 8 for White, rank 1 for Black).
-En passant: capturing a pawn that just moved two squares.
-
-- King !
-Castling: moves two squares left or right if rook + king haven’t moved, no check along the path.
-*/
 
 pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     // see knight-offset.jpg
@@ -244,7 +215,7 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
         let spotlight = 1u64 << forward1;
         if (position.bb_sides[0].0 & spotlight == 0) && (position.bb_sides[1].0 & spotlight == 0) {
             if is_pawn_promotion(forward1 as u8, piece) {
-                println!("Promoted! wow!");
+                //println!("Promoted! wow!");
                 for promoted_piece in valid_pawn_promotions(from, forward1 as u8, piece) {
                     moves.push(Move {
                         from,
@@ -253,7 +224,7 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
                     });
                 }
             } else {
-                println!("normal forward");
+                //println!("normal forward");
                 moves.push(Move {
                     from,
                     to: forward1 as u8,
@@ -291,7 +262,8 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
         if (position.bb_sides[enemy_index].0 & spotlight) != 0 {
             //println!("There's an enemy!! aaa");
             if is_pawn_promotion(target as u8, piece) {
-                println!("capture AND promotion. thats crazy");
+                //println!("capture AND promotion. thats crazy");
+                // använda .extend istället -> kräver omskriv av valid_pawn prom
                 for promoted_piece in valid_pawn_promotions(from, forward1 as u8, piece) {
                     moves.push(Move {
                         from,
@@ -301,7 +273,7 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
                 }
             } 
             else {
-                println!("normal capture");
+                //println!("normal capture");
                 moves.push(Move { from, to: target as u8, piece });
             }
         }

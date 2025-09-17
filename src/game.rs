@@ -40,7 +40,7 @@ impl Game {
                 if c == current_color {
                     Ok(piece)
                 } else {
-                    Err("that piece does not belong to you poopy boy >:I")
+                    Err("That piece does not belong to you.") //redundant?
                 }
             }
         }
@@ -54,7 +54,6 @@ impl Game {
                     return Err("You can only select your own pieces");
                 }
                 self.selected = Some((piece, square));
-                println!("selected var: {:?}", self.selected);
                 Ok(piece)
             }
             None => Err("No piece here"),

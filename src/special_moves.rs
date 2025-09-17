@@ -10,9 +10,14 @@ https://en.wikipedia.org/wiki/Promotion_(chess)
 - Promotion is mandatory when moving to the last rank; the pawn cannot remain as a pawn. 
 
 En passant: capturing a pawn that just moved two squares. (??)
+- kräver ett "flow"
+- använda flagga? 
 
 - King !
 Castling: moves two squares left or right if rook + king haven’t moved, no check along the path.
+- Castling is permitted only if neither the king nor the rook has previously moved
+- flagga för "has moved" för rook/king? 
+- kräver flow ish
 */
 
 /// Check if a pawn move reaches its promotion rank (row).
