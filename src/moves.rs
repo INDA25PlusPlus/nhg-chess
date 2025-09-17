@@ -1,6 +1,6 @@
-use crate::piece::{Piece, Color};
+use crate::piece::{Color, Piece};
 use crate::position::Position;
-use crate::special_moves::is_pawn_promotion;
+use crate::special_moves::{is_pawn_promotion, valid_pawn_promotions};
 
 #[derive(Debug)]
 pub struct Move {
@@ -16,7 +16,7 @@ pub fn valid_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
         Piece::Bishop(_) => valid_bishop_moves(from, piece, position),
         Piece::Rook(_) => valid_rook_moves(from, piece, position),
         Piece::Queen(_) => valid_queen_moves(from, piece, position),
-        Piece::King(_) => valid_king_moves(from, piece, position)
+        Piece::King(_) => valid_king_moves(from, piece, position),
     }
 }
 
@@ -39,7 +39,7 @@ pub fn piece_indexes(piece: Piece) -> (usize, usize) {
     }
 }
 
-/* 
+/*
 Bitboard set-up:
 8 | 56 57 58 59 60 61 62 63
 7 | 48 49 50 51 52 53 54 55
@@ -56,7 +56,7 @@ Bitboard set-up:
 Pieces with normal moves only
 - Knight X
 - Bishop X
-- Rook X 
+- Rook X
 - Queen X
 
 Pieces with special moves
@@ -89,7 +89,7 @@ pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
         let target_column = (target % 8) as i8;
         let target_row = (target / 8) as i8;
 
-        // horse cannot move greater than 2 squares in one direction 
+        // horse cannot move greater than 2 squares in one direction
         if (from_column - target_column).abs() > 2 || (from_row - target_row).abs() > 2 {
             continue;
         }
@@ -123,12 +123,12 @@ pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
     moves
 }
 
-// representing a large RANGE of moves such as this? 
+// representing a large RANGE of moves such as this?
 pub fn valid_bishop_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     let mut moves = Vec::new();
 
     let (friendly_index, enemy_index) = piece_indexes(piece);
-    
+
     let directions: [i8; 4] = [7, 9, -7, -9];
     for &dir in &directions {
         let mut target = from as i8;
@@ -155,10 +155,18 @@ pub fn valid_bishop_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
             }
             // enemy piece? push move, then stop
             if (position.bb_sides[enemy_index].0 & spotlight) != 0 {
-                moves.push(Move { from, to: target as u8, piece });
+                moves.push(Move {
+                    from,
+                    to: target as u8,
+                    piece,
+                });
                 break;
             }
-            moves.push(Move { from, to: target as u8, piece });
+            moves.push(Move {
+                from,
+                to: target as u8,
+                piece,
+            });
         }
     }
     moves
@@ -168,7 +176,7 @@ pub fn valid_rook_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
     let mut moves = Vec::new();
 
     let (friendly_index, enemy_index) = piece_indexes(piece);
-    
+
     let directions: [i8; 4] = [1, 8, -1, -8];
     for &dir in &directions {
         let mut target = from as i8;
@@ -194,10 +202,18 @@ pub fn valid_rook_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
             }
             // enemy piece: push move, then stop
             if (position.bb_sides[enemy_index].0 & spotlight) != 0 {
-                moves.push(Move { from, to: target as u8, piece });
+                moves.push(Move {
+                    from,
+                    to: target as u8,
+                    piece,
+                });
                 break;
             }
-            moves.push(Move { from, to: target as u8, piece });
+            moves.push(Move {
+                from,
+                to: target as u8,
+                piece,
+            });
         }
     }
     moves
@@ -212,10 +228,10 @@ pub fn valid_queen_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mov
 pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     let mut moves = Vec::new();
 
-    let (dir, start_row ) = match piece {
-        Piece::Pawn(Color::White) => (8, 1), // white moves up
+    let (dir, start_row) = match piece {
+        Piece::Pawn(Color::White) => (8, 1),  // white moves up
         Piece::Pawn(Color::Black) => (-8, 6), // black moves down
-        _ => return moves, 
+        _ => return moves,
     };
     let (_friendly_index, enemy_index) = piece_indexes(piece);
 
@@ -227,10 +243,23 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
     if forward1 >= 0 && forward1 < 64 {
         let spotlight = 1u64 << forward1;
         if (position.bb_sides[0].0 & spotlight == 0) && (position.bb_sides[1].0 & spotlight == 0) {
-            if is_pawn_promotion(forward1 as u8, piece){
-                println!(">> you can be promoted if you step forth!!");
+            if is_pawn_promotion(forward1 as u8, piece) {
+                println!("Promoted! wow!");
+                for promoted_piece in valid_pawn_promotions(from, forward1 as u8, piece) {
+                    moves.push(Move {
+                        from,
+                        to: forward1 as u8,
+                        piece: promoted_piece,
+                    });
+                }
+            } else {
+                println!("normal forward");
+                moves.push(Move {
+                    from,
+                    to: forward1 as u8,
+                    piece,
+                });
             }
-            moves.push(Move { from, to: forward1 as u8, piece });
 
             // 2-squares forward from starting row
             if from_row == start_row {
@@ -258,10 +287,23 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
         }
 
         let spotlight = 1u64 << target;
-        println!("Enemy spotlight: {:064b}", spotlight);
+        //println!("Enemy spotlight: {:064b}", spotlight);
         if (position.bb_sides[enemy_index].0 & spotlight) != 0 {
-            println!("There's an enemy!! aaa");
-            moves.push(Move { from, to: target as u8, piece });
+            //println!("There's an enemy!! aaa");
+            if is_pawn_promotion(target as u8, piece) {
+                println!("capture AND promotion. thats crazy");
+                for promoted_piece in valid_pawn_promotions(from, forward1 as u8, piece) {
+                    moves.push(Move {
+                        from,
+                        to: forward1 as u8,
+                        piece: promoted_piece,
+                    });
+                }
+            } 
+            else {
+                println!("normal capture");
+                moves.push(Move { from, to: target as u8, piece });
+            }
         }
         // indicating in move that move is a capture?
     }
