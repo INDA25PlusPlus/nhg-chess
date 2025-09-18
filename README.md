@@ -7,7 +7,7 @@ https://doc.rust-lang.org/reference/comments.html
 - [ ] flags for king, rook, and pawns that moved 2 squares (performant way to store?) (#12)
 - [ ] then, special moves: castling, en passant (#12)
 - [ ] make test.rs with perft tests (?)/tests listed in test.md (#7)
-extra (ish)
+## extra (ish)
 - [ ] ensure no "non lib" elements are in the lib 
 - [ ] bit/coordinate exchange function
 - [ ] modularize checks for color/piece which is repeated all over the code (#8)
