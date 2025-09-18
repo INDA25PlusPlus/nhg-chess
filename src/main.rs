@@ -9,12 +9,11 @@ fn main() {
     print_debug_board(&game.position);
 
     let moves: Vec<(u8, u8)> = vec![
-        (7, 15), // white attempts invalid mvoe
-        (13, 21), 
-        (52, 36), 
-        (14, 30), 
-        (59, 31), // (checkmate)
-        (48, 40), // black tries to keep playing but cannot
+        (7, 15),
+        (60,62),
+        (15,7),
+        (56,57),
+        (4,6),
     ];
 
     for (from, to) in moves {
@@ -45,6 +44,7 @@ fn execute_move(game: &mut Game, from_square: u8, to_square: u8) -> bool {
             }
             println!("");
 
+            // NOTE, being able to pick move id is important for special moves like promotion so this step should NOT always be left to computer.
             if let Some(idx) = find_move_to(&moves, to_square) {
                 let chosen_move = moves[idx];
                 println!("Choosing move index {} -> {:?}", idx, chosen_move);

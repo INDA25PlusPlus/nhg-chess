@@ -1,6 +1,6 @@
-//use crate::position::Position;
 use crate::piece::{Piece, Color};
-//use crate::moves::Move;
+use crate::position::Position;
+use crate::moves::{Move, piece_indexes};
 
 /*
 - Pawn !
@@ -46,4 +46,51 @@ pub fn valid_pawn_promotions(_from: u8, _to: u8, piece: Piece) -> Vec<Piece> {
         ],
         _ => vec![],
     }
+}
+
+pub fn castling_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
+    let mut moves = Vec::new();
+    let cr = &position.castling_rights;
+    let (own_index, enemy_index) = piece_indexes(piece);
+
+    match piece.color() {
+        Color::White => {
+            if from == 4 { 
+                // kingside
+                if !cr.white_king_moved && !cr.white_kingside_rook_moved {
+                    let empty = !(position.bb_sides[own_index].0 | position.bb_sides[enemy_index].0);
+                    if (empty & (1<<5 | 1<<6)) == (1<<5 | 1<<6) {
+                        moves.push(Move { from, to: 6, piece });
+                    }
+                }
+                // queenside
+                if !cr.white_king_moved && !cr.white_queenside_rook_moved {
+                    let empty = !(position.bb_sides[own_index].0 | position.bb_sides[enemy_index].0);
+                    if (empty & (1<<1 | 1<<2 | 1<<3)) == (1<<1 | 1<<2 | 1<<3) {
+                        moves.push(Move { from, to: 2, piece });
+                    }
+                }
+            }
+        }
+        Color::Black => {
+            if from == 60 { 
+                // kingside
+                if !cr.black_king_moved && !cr.black_kingside_rook_moved {
+                    let empty = !(position.bb_sides[own_index].0 | position.bb_sides[enemy_index].0);
+                    if (empty & (1<<61 | 1<<62)) == (1<<61 | 1<<62) {
+                        moves.push(Move { from, to: 62, piece });
+                    }
+                }
+                // queenside
+                if !cr.black_king_moved && !cr.black_queenside_rook_moved {
+                    let empty = !(position.bb_sides[own_index].0 | position.bb_sides[enemy_index].0);
+                    if (empty & (1<<57 | 1<<58 | 1<<59)) == (1<<57 | 1<<58 | 1<<59) {
+                        moves.push(Move { from, to: 58, piece });
+                    }
+                }
+            }
+        }
+    }
+
+    moves
 }

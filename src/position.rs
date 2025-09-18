@@ -1,5 +1,5 @@
 use crate::bitboard::BitBoard;
-use crate::piece::{Piece, Color};
+use crate::piece::{Piece, Color, CastlingRights};
 
 // is copy needed? idk. added for debug
 
@@ -12,6 +12,7 @@ pub struct Position{
     pub bb_sides: [BitBoard; 2],
     /// Shows the positions of each piece-color combination, i.e. the location of White Rook (if any).
     pub bb_pieces: [[BitBoard; 6]; 2],
+    pub castling_rights: CastlingRights,
 }
 
 pub struct Sides;

@@ -1,6 +1,6 @@
 use crate::piece::{Color, Piece};
 use crate::position::{Position};
-use crate::special_moves::{is_pawn_promotion, valid_pawn_promotions};
+use crate::special_moves::{is_pawn_promotion, valid_pawn_promotions, castling_moves};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Move {
@@ -324,6 +324,6 @@ pub fn valid_king_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
 
         moves.push(Move { from, to: target as u8, piece } );
     }
-
+    moves.extend(castling_moves(from, piece, position));
     moves
 }

@@ -1,7 +1,7 @@
+use crate::game::{Game, GameResult};
 use crate::moves::{Move, valid_moves};
 use crate::piece::{Color, Piece};
 use crate::position::{Pieces, Position, Sides};
-use crate::game::{Game, GameResult};
 
 // see: https://www.chessprogramming.org/Bitboard_Serialization
 
@@ -25,13 +25,14 @@ pub fn make_move(m: Move, game: &mut Game) -> Result<(), String> {
 
     // commit to real position
     apply_move_unchecked(m, position);
+    update_castling_rights(m, position);
 
     // check if opponent king is in check
     let enemy_color = match m.piece.color() {
         Color::White => Color::Black,
         Color::Black => Color::White,
     };
-    
+
     if is_checked(enemy_color, position) {
         println!("{:?} king is in check", enemy_color);
     }
@@ -46,6 +47,30 @@ pub fn make_move(m: Move, game: &mut Game) -> Result<(), String> {
     }
     game.turn_tracker();
     Ok(())
+}
+
+fn update_castling_rights(m: Move, position: &mut Position) {
+    match m.piece {
+        Piece::King(Color::White) => position.castling_rights.white_king_moved = true,
+        Piece::King(Color::Black) => position.castling_rights.black_king_moved = true,
+        Piece::Rook(Color::White) => {
+            if m.from == 0 {
+                position.castling_rights.white_queenside_rook_moved = true;
+            } // can this cause a pooblem if it mvoes multiple times from the same spot? true + true = ...?
+            if m.from == 7 {
+                position.castling_rights.white_kingside_rook_moved = true;
+            }
+        }
+        Piece::Rook(Color::Black) => {
+            if m.from == 56 {
+                position.castling_rights.black_queenside_rook_moved = true;
+            }
+            if m.from == 63 {
+                position.castling_rights.black_kingside_rook_moved = true;
+            }
+        }
+        _ => {}
+    }
 }
 
 /// Apply the move to `position` (across bitboards)
@@ -87,6 +112,30 @@ pub fn apply_move_unchecked(m: Move, position: &mut Position) {
                 position.bb_pieces[enemy_index][i].0 &= !to_mask;
                 break;
             }
+        }
+    }
+    // Castling: king moves 2 squares horizontally
+    if let Piece::King(color) = m.piece {
+        if (m.from as i8 - m.to as i8).abs() == 2 {
+            let (rook_from, rook_to) = match (color, m.to) {
+                (Color::Black, 62) => (63, 61),
+                (Color::Black, 58) => (56, 59),
+                (Color::White, 6) => (7, 5), 
+                (Color::White, 2) => (0, 3),
+                _ => (0, 0),
+            };
+
+            let rook_mask_from = 1u64 << rook_from;
+            let rook_mask_to = 1u64 << rook_to;
+            // ("rook from {}, to {}", rook_from, rook_to);
+
+            // remove rook from original square
+            position.bb_sides[friendly_index].0 &= !rook_mask_from;
+            position.bb_pieces[friendly_index][Pieces::ROOK].0 &= !rook_mask_from;
+
+            // place rook on new square
+            position.bb_sides[friendly_index].0 |= rook_mask_to;
+            position.bb_pieces[friendly_index][Pieces::ROOK].0 |= rook_mask_to;
         }
     }
     // update friendly SIDE occupancy and that PIECE LAYER
