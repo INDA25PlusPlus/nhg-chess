@@ -1,24 +1,16 @@
 use crate::piece::{Piece, Color};
 use crate::position::{Position, get_piece_at};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum GameResult {
-    Ongoing,
-    Checkmate(Color), 
-    Stalemate,
-}
-
 pub struct Game {
     pub position: Position,
     pub turn: u32,
-    pub selected: Option<(Piece, u8)>,
-    pub result: GameResult,
+    pub selected: Option<(Piece, u8)>
 }
 
 impl Game {
     // constructor 
     pub fn new(position: Position) -> Self {
-        Game { position, turn: 1, selected: None, result: GameResult::Ongoing, }
+        Game { position, turn: 1, selected: None }
     }
     
     // "mut self" -> method takes ownership of the instance and allows it to be mutated within the method.  (borrow mut)
