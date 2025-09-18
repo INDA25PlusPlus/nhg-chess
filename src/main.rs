@@ -9,13 +9,18 @@ fn main() {
     print_debug_board(&game.position);
 
     let moves: Vec<(u8, u8)> = vec![
-        (8, 24),  
-        (49, 33),
-        (24, 33),
+        (7, 15), // white attempts invalid mvoe
+        (13, 21), 
+        (52, 36), 
+        (14, 30), 
+        (59, 31), // (checkmate)
+        (48, 40), // black tries to keep playing but cannot
     ];
 
     for (from, to) in moves {
-        execute_move(&mut game, from, to);
+        if execute_move(&mut game, from, to) {
+            break; // stop processing remaining moves
+        }
     }
 }
 
@@ -24,7 +29,7 @@ fn find_move_to(moves: &Vec<Move>, to_square: u8) -> Option<usize> {
     moves.iter().position(|m| m.to == to_square)
 }
 /// Execute the move from `from_square` to `to_square` (searches the valid_moves and uses make_move).
-fn execute_move(game: &mut Game, from_square: u8, to_square: u8) {
+fn execute_move(game: &mut Game, from_square: u8, to_square: u8) -> bool {
     println!("Current Color: {:?}", game.player_tracker());
     match game.select_piece(from_square) {
         Ok(piece) => {
@@ -32,7 +37,7 @@ fn execute_move(game: &mut Game, from_square: u8, to_square: u8) {
             let moves = valid_moves(from_square, piece, &game.position);
             if moves.is_empty() {
                 println!("No valid moves for this piece!");
-                return;
+                return false;
             }
             println!("Valid moves:");
             for (i, m) in moves.iter().enumerate() {
@@ -48,6 +53,10 @@ fn execute_move(game: &mut Game, from_square: u8, to_square: u8) {
                     Ok(()) => {
                         println!("After move:");
                         print_debug_board(&game.position);
+                        if game.is_over() {
+                            println!("Game has ended: {:?}", game.result);
+                            return true;
+                        }
                     }
                     Err(e) => println!("Move failed: {}", e),
                 }
@@ -57,6 +66,7 @@ fn execute_move(game: &mut Game, from_square: u8, to_square: u8) {
         }
         Err(msg) => println!("Selection failed: {}", msg),
     }
+    false
 }
 
 

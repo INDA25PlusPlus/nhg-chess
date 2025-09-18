@@ -1,7 +1,7 @@
 use crate::moves::{Move, valid_moves};
 use crate::piece::{Color, Piece};
 use crate::position::{Pieces, Position, Sides};
-use crate::game::Game;
+use crate::game::{Game, GameResult};
 
 // see: https://www.chessprogramming.org/Bitboard_Serialization
 
@@ -33,12 +33,16 @@ pub fn make_move(m: Move, game: &mut Game) -> Result<(), String> {
     };
     
     if is_checked(enemy_color, position) {
-        println!("----> !! {:?} king is in check !!", enemy_color);
+        println!("{:?} king is in check", enemy_color);
     }
     if is_checkmated(enemy_color, &position) {
-        println!("{:?} is checkmated. Game over!", enemy_color);
+        println!("{:?} is checkmated.", enemy_color);
+        game.result = GameResult::Checkmate(enemy_color);
+        return Ok(());
     } else if is_stalemated(enemy_color, &position) {
         println!("Stalemate! It's a draw.");
+        game.result = GameResult::Stalemate;
+        return Ok(());
     }
     game.turn_tracker();
     Ok(())
@@ -160,8 +164,10 @@ pub fn legal_moves(color: Color, position: &Position) -> Vec<Move> {
                 _ => unreachable!(),
             };
 
-            for m in valid_moves(from, piece, position) {
-                // simulate to check legality
+            let pseudo_moves = valid_moves(from, piece, position);
+
+            // filter out moves that leave king in check
+            for m in pseudo_moves {
                 let mut test_pos = position.clone();
                 apply_move_unchecked(m, &mut test_pos);
                 if !is_checked(color, &test_pos) {

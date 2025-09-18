@@ -1,7 +1,6 @@
 use crate::piece::{Color, Piece};
 use crate::position::{Position};
 use crate::special_moves::{is_pawn_promotion, valid_pawn_promotions};
-use crate::make_move::{apply_move_unchecked, is_checked};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Move {
@@ -284,6 +283,7 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
     moves
 }
 
+/// Genereates PSEUDO legal moves for the king. i.e. does not check for moves that leaves in chekc
 pub fn valid_king_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     let mut moves = Vec::new();
 
@@ -322,14 +322,7 @@ pub fn valid_king_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
             continue;
         }
 
-        let mut test_pos = position.clone();
-        let m = Move { from, to: target as u8, piece };
-        apply_move_unchecked(m, &mut test_pos);
-
-        // only accept if the king is NOT in check
-        if !is_checked(piece.color(), &test_pos) {
-            moves.push(m);
-        }
+        moves.push(Move { from, to: target as u8, piece } );
     }
 
     moves
