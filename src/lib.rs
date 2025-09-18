@@ -6,6 +6,7 @@ pub mod game;
 pub mod moves;
 pub mod special_moves;
 pub mod make_move;
+pub mod helper;
 
 // re-exports for easier access from outside
 pub use piece::{Piece, Color};
@@ -14,6 +15,7 @@ pub use position::{Position, Sides, Pieces, get_piece_at};
 pub use game::Game; 
 pub use moves::{valid_moves, Move};
 pub use make_move::make_move;
+pub use helper::initialize_board;
 
 /* --- notes / future functions ---
 

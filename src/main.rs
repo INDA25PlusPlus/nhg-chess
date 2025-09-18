@@ -2,36 +2,21 @@
 use chess::*;
 
 fn main() {
-    // ---------------initializing s
-    let mut position = Position {
-        bb_sides: [BitBoard(0), BitBoard(1)],
-        bb_pieces: [[BitBoard(0); 6]; 2],
-    };
-    //position.bb_pieces[Sides::WHITE][Pieces::ROOK] = BitBoard(1 << 0);  
-    position.bb_pieces[Sides::WHITE][Pieces::QUEEN] = BitBoard(1 << 45 | 1 << 0 ); 
-    position.bb_pieces[Sides::BLACK][Pieces::KING] = BitBoard(1 << 63);
-    position.bb_pieces[Sides::BLACK][Pieces::ROOK] = BitBoard(1 << 9);
-
-    position.bb_sides[Sides::WHITE].0 = position.bb_pieces[Sides::WHITE]
-        .iter()
-        .fold(0u64, |acc, bb| acc | bb.0);
-    position.bb_sides[Sides::BLACK].0 = position.bb_pieces[Sides::BLACK]
-        .iter()
-        .fold(0u64, |acc, bb| acc | bb.0);
-
-    // --------------main.rs
+    let position = initialize_board();
     let mut game = Game::new(position);
 
     println!("Board Before move:");
     print_debug_board(&game.position);
 
-    execute_move(&mut game, 1, 7); // white picks invalid move
-    execute_move(&mut game, 0, 7); // white tries again and succeeds
-    execute_move(&mut game, 9, 15); // black plays
-    execute_move(&mut game, 7, 15); 
-    execute_move(&mut game, 63, 55); // black attempts illegal king move (would result in check)
-    execute_move(&mut game, 63, 62); 
-    execute_move(&mut game, 15, 43); 
+    let moves: Vec<(u8, u8)> = vec![
+        (8, 24),  
+        (49, 33),
+        (24, 33),
+    ];
+
+    for (from, to) in moves {
+        execute_move(&mut game, from, to);
+    }
 }
 
 /// Find index of the move that goes to `to_square`.
