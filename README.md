@@ -4,8 +4,8 @@ https://doc.rust-lang.org/reference/comments.html
 # to do (in order of priority)
 - [X] initialize_board (#9)
 - [X] add game status struct for ending the game (#13)
-- [ ] flags for king, rook, and pawns that moved 2 squares (performant way to store?) (#12)
-- [ ] then, special moves: castling, en passant (#12)
+- [X] flags for king, rook, and pawns that moved 2 squares (performant way to store?) (#12)
+- [X] then, special moves: castling, en passant (#12)
 - [ ] make test.rs with perft tests (?)/tests listed in test.md (#7)
 ## extra (ish)
 - [ ] ensure no "non lib" elements are in the lib 
