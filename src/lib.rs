@@ -9,13 +9,12 @@ pub mod make_move;
 pub mod helper;
 
 // re-exports for easier access from outside
-pub use piece::{Piece, Color};
 pub use bitboard::BitBoard;
-pub use position::{Position, Sides, Pieces, get_piece_at};
+pub use position::{Position, Sides};
 pub use game::Game; 
 pub use moves::{valid_moves, Move};
 pub use make_move::make_move;
-pub use helper::initialize_board;
+pub use helper::{initialize_board, index_to_square, square_to_index,print_debug_board};
 
 /* --- notes / future functions ---
 

@@ -8,21 +8,29 @@ fn main() {
     println!("Board Before move:");
     print_debug_board(&game.position);
 
-    let moves: Vec<(u8, u8)> = vec![
-        (14,30),
-        (49, 33),
-        (15,23),
-        (33,25),
-        (8,24),
-        (25,16),
-        (30,38),
-        (53,37),
-        (38,45),
-        (16,9),
-        (45,54),
-        (9,1),
-        (54,62),
+    let moves_str: Vec<(&str, &str)> = vec![
+        ("B2", "B4"),
+        ("H7","H6"),
+        ("B4","B5"),
+        ("A7","A5"),
+        ("B5","A6"),
+        ("H6","H5"),
+        ("A6","B7"),
+        ("H5","H4"),
+        ("B7","A8"),
+        ("H4","H3"),
+        ("A8", "B8"),
     ];
+
+    let moves: Vec<(u8, u8)> = moves_str
+    .iter()
+    .filter_map(|(from, to)| {
+        Some((
+            square_to_index(from)?,
+            square_to_index(to)?,
+        ))
+    })
+    .collect();
 
     for (from, to) in moves {
         if execute_move(&mut game, from, to) {
@@ -40,7 +48,7 @@ fn execute_move(game: &mut Game, from_square: u8, to_square: u8) -> bool {
     println!("Current Color: {:?}", game.player_tracker());
     match game.select_piece(from_square) {
         Ok(piece) => {
-            println!("You selected: {:?} on square {}", piece, from_square);
+            println!("You selected: {:?} on square {}", piece, index_to_square(from_square));
             let moves = valid_moves(from_square, piece, &game.position);
             if moves.is_empty() {
                 println!("No valid moves for this piece!");
@@ -69,53 +77,10 @@ fn execute_move(game: &mut Game, from_square: u8, to_square: u8) -> bool {
                     Err(e) => println!("Move failed: {}", e),
                 }
             } else {
-                println!("No valid move from {} to {} found.", from_square, to_square);
+                println!("No valid move from {:?} to {:?} found.", index_to_square(from_square), index_to_square(to_square));
             }
         }
         Err(msg) => println!("Selection failed: {}", msg),
     }
     false
-}
-
-
-/// Prints the state of the board with all sides.
-/// Made up of numbers (bit indices 0..63) and letters (where "WP" = "White Pawn" and "BN" = "Black Knight")
-pub fn print_debug_board(position: &Position) {
-    for row in (0..8).rev() {
-        for col in 0..8 {
-            let square: i32 = row * 8 + col;
-            let mask = 1u64 << square;
-            let mut output = format!("{:02}", square); // default: bit index
-
-            for side in [Sides::WHITE, Sides::BLACK] {
-                for (i, bb) in position.bb_pieces[side].iter().enumerate() {
-                    if (bb.0 & mask) != 0 {
-                        let color_code = if side == Sides::WHITE {
-                            "\x1b[31m"
-                        } else {
-                            "\x1b[32m"
-                        }; // red / green
-                        let piece_char = match i {
-                            0 => "P",
-                            1 => "N",
-                            2 => "B",
-                            3 => "R",
-                            4 => "Q",
-                            5 => "K",
-                            _ => "?",
-                        };
-                        output = format!(
-                            "{}{}{}\x1b[0m",
-                            color_code,
-                            if side == Sides::WHITE { "W" } else { "B" },
-                            piece_char
-                        );
-                    }
-                }
-            }
-            print!("{} ", output);
-        }
-        println!();
-    }
-    println!();
 }

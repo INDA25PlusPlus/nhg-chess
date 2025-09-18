@@ -47,3 +47,72 @@ pub fn initialize_board() -> Position {
 
     position
 }
+
+/// Converts a bit index (0..63) to chess notation, e.g., 0 -> "A1", 63 -> "H8"
+pub fn index_to_square(index: u8) -> String {
+    let file = (index % 8) as u8;
+    let rank = (index / 8) as u8;
+    let file_char = (b'A' + file) as char;
+    let rank_char = (b'1' + rank) as char;
+    format!("{}{}", file_char, rank_char)
+}
+
+/// Converts chess notation ("A1".."H8") to bit index (0..63)
+pub fn square_to_index(square: &str) -> Option<u8> {
+    if square.len() != 2 {
+        return None;
+    }
+    let mut chars = square.chars();
+    let file = chars.next()?.to_ascii_uppercase();
+    let rank = chars.next()?;
+
+    if !('A'..='H').contains(&file) || !('1'..='8').contains(&rank) {
+        return None;
+    }
+
+    let file_idx = file as u8 - b'A';
+    let rank_idx = rank as u8 - b'1';
+    Some(rank_idx * 8 + file_idx)
+}
+
+/// Prints the state of the board with all sides.
+/// Made up of numbers chess notation (A1...H8) and letters (where "WP" = "White Pawn" and "BN" = "Black Knight")
+pub fn print_debug_board(position: &Position) {
+    for row in (0..8).rev() {
+        for col in 0..8 {
+            let square: i32 = row * 8 + col;
+            let mask = 1u64 << square;
+            let mut output = index_to_square(square as u8);
+
+            for side in [Sides::WHITE, Sides::BLACK] {
+                for (i, bb) in position.bb_pieces[side].iter().enumerate() {
+                    if (bb.0 & mask) != 0 {
+                        let color_code = if side == Sides::WHITE {
+                            "\x1b[31m"
+                        } else {
+                            "\x1b[32m"
+                        }; // red / green
+                        let piece_char = match i {
+                            0 => "P",
+                            1 => "N",
+                            2 => "B",
+                            3 => "R",
+                            4 => "Q",
+                            5 => "K",
+                            _ => "?",
+                        };
+                        output = format!(
+                            "{}{}{}\x1b[0m",
+                            color_code,
+                            if side == Sides::WHITE { "W" } else { "B" },
+                            piece_char
+                        );
+                    }
+                }
+            }
+            print!("{} ", output);
+        }
+        println!();
+    }
+    println!();
+}
