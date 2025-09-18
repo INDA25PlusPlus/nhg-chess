@@ -13,6 +13,7 @@ pub struct Position{
     /// Shows the positions of each piece-color combination, i.e. the location of White Rook (if any).
     pub bb_pieces: [[BitBoard; 6]; 2],
     pub castling_rights: CastlingRights,
+    pub en_passant: Option<u8>, // None or bit position
 }
 
 pub struct Sides;

@@ -9,12 +9,13 @@ https://en.wikipedia.org/wiki/Promotion_(chess)
 - The new piece does not have to be a previously captured piece
 - Promotion is mandatory when moving to the last rank; the pawn cannot remain as a pawn. 
 
-En passant: capturing a pawn that just moved two squares. (??)
-- kräver ett "flow"
-- använda flagga? 
+En passant: capturing a pawn that just moved two squares. (??) 
+https://www.chessprogramming.org/En_passant
+https://www.chessprogramming.org/Forsyth-Edwards_Notation#Enpassanttargetsquare
+- track one square at a time
 
-- King !
-Castling: moves two squares left or right if rook + king haven’t moved, no check along the path.
+- King 
+X Castling: moves two squares left or right if rook + king haven’t moved, no check along the path.
 - Castling is permitted only if neither the king nor the rook has previously moved
 - flagga för "has moved" för rook/king? 
 - kräver flow ish
@@ -60,14 +61,14 @@ pub fn castling_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> 
                 if !cr.white_king_moved && !cr.white_kingside_rook_moved {
                     let empty = !(position.bb_sides[own_index].0 | position.bb_sides[enemy_index].0);
                     if (empty & (1<<5 | 1<<6)) == (1<<5 | 1<<6) {
-                        moves.push(Move { from, to: 6, piece });
+                        moves.push(Move { from, to: 6, piece, promoted_from_pawn: false });
                     }
                 }
                 // queenside
                 if !cr.white_king_moved && !cr.white_queenside_rook_moved {
                     let empty = !(position.bb_sides[own_index].0 | position.bb_sides[enemy_index].0);
                     if (empty & (1<<1 | 1<<2 | 1<<3)) == (1<<1 | 1<<2 | 1<<3) {
-                        moves.push(Move { from, to: 2, piece });
+                        moves.push(Move { from, to: 2, piece, promoted_from_pawn: false });
                     }
                 }
             }
@@ -78,14 +79,14 @@ pub fn castling_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> 
                 if !cr.black_king_moved && !cr.black_kingside_rook_moved {
                     let empty = !(position.bb_sides[own_index].0 | position.bb_sides[enemy_index].0);
                     if (empty & (1<<61 | 1<<62)) == (1<<61 | 1<<62) {
-                        moves.push(Move { from, to: 62, piece });
+                        moves.push(Move { from, to: 62, piece, promoted_from_pawn: false,});
                     }
                 }
                 // queenside
                 if !cr.black_king_moved && !cr.black_queenside_rook_moved {
                     let empty = !(position.bb_sides[own_index].0 | position.bb_sides[enemy_index].0);
                     if (empty & (1<<57 | 1<<58 | 1<<59)) == (1<<57 | 1<<58 | 1<<59) {
-                        moves.push(Move { from, to: 58, piece });
+                        moves.push(Move { from, to: 58, piece, promoted_from_pawn: false, });
                     }
                 }
             }

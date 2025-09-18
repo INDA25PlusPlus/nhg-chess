@@ -45,6 +45,7 @@ pub fn make_move(m: Move, game: &mut Game) -> Result<(), String> {
         game.result = GameResult::Stalemate;
         return Ok(());
     }
+    //println!("En Passant: {:?}", position.en_passant);
     game.turn_tracker();
     Ok(())
 }
@@ -89,19 +90,22 @@ pub fn apply_move_unchecked(m: Move, position: &mut Position) {
     let from_mask: u64 = 1u64 << m.from;
     let to_mask: u64 = 1u64 << m.to;
 
-    let piece_index = match m.piece {
-        Piece::Pawn(_) => Pieces::PAWN,
-        Piece::Knight(_) => Pieces::KNIGHT,
-        Piece::Bishop(_) => Pieces::BISHOP,
-        Piece::Rook(_) => Pieces::ROOK,
-        Piece::Queen(_) => Pieces::QUEEN,
-        Piece::King(_) => Pieces::KING,
-    };
-
-    // remove piece from the 'from' square in both friendly SIDE & PIECE LAYER
     position.bb_sides[friendly_index].0 &= !from_mask;
-    position.bb_pieces[friendly_index][piece_index].0 &= !from_mask;
 
+    if m.promoted_from_pawn {
+        //println!("it's a promotion, ja");
+        position.bb_pieces[friendly_index][Pieces::PAWN].0 &= !from_mask;
+    } else {
+        let piece_index = match m.piece {
+            Piece::Pawn(_) => Pieces::PAWN,
+            Piece::Knight(_) => Pieces::KNIGHT,
+            Piece::Bishop(_) => Pieces::BISHOP,
+            Piece::Rook(_) => Pieces::ROOK,
+            Piece::Queen(_) => Pieces::QUEEN,
+            Piece::King(_) => Pieces::KING,
+        };
+        position.bb_pieces[friendly_index][piece_index].0 &= !from_mask;
+    }
     // if 'to' square contains an enemy, remove that enemy piece
     if (position.bb_sides[enemy_index].0 & to_mask) != 0 {
         // remove from enemy SIDE occupancy
@@ -138,7 +142,50 @@ pub fn apply_move_unchecked(m: Move, position: &mut Position) {
             position.bb_pieces[friendly_index][Pieces::ROOK].0 |= rook_mask_to;
         }
     }
-    // update friendly SIDE occupancy and that PIECE LAYER
+    if let Piece::Pawn(pawn_color) = m.piece {
+        let dir = match pawn_color {
+            Color::White => 8,
+            Color::Black => -8,
+        };
+
+        // check if this move is an en passant capture 
+        if let Some(ep_square) = position.en_passant {
+            if m.to == ep_square {
+                let captured_pawn_square = (ep_square as i8 - dir) as u8;
+                let captured_mask = 1u64 << captured_pawn_square;
+
+                position.bb_sides[enemy_index].0 &= !captured_mask;
+                position.bb_pieces[enemy_index][Pieces::PAWN].0 &= !captured_mask;
+            }
+        }
+        position.en_passant = None;
+        if (m.from as i8 + 2 * dir) == m.to as i8 {
+            let ep_square = (m.from as i8 + dir) as u8;
+            position.en_passant = Some(ep_square);
+            //println!("En passant square {}", ep_square);
+        }
+    }
+
+    let piece_index = if m.promoted_from_pawn {
+        // The piece is the promoted piece
+        match m.piece {
+            Piece::Queen(_) => Pieces::QUEEN,
+            Piece::Rook(_) => Pieces::ROOK,
+            Piece::Bishop(_) => Pieces::BISHOP,
+            Piece::Knight(_) => Pieces::KNIGHT,
+            _ => Pieces::PAWN,
+        }
+    } else {
+        match m.piece {
+            Piece::Pawn(_) => Pieces::PAWN,
+            Piece::Knight(_) => Pieces::KNIGHT,
+            Piece::Bishop(_) => Pieces::BISHOP,
+            Piece::Rook(_) => Pieces::ROOK,
+            Piece::Queen(_) => Pieces::QUEEN,
+            Piece::King(_) => Pieces::KING,
+        }
+    };
+
     position.bb_sides[friendly_index].0 |= to_mask;
     position.bb_pieces[friendly_index][piece_index].0 |= to_mask;
 }

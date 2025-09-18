@@ -1,12 +1,20 @@
 use crate::piece::{Color, Piece};
-use crate::position::{Position};
-use crate::special_moves::{is_pawn_promotion, valid_pawn_promotions, castling_moves};
+use crate::position::Position;
+use crate::special_moves::{castling_moves, is_pawn_promotion, valid_pawn_promotions};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Eq)]
 pub struct Move {
     pub from: u8,
     pub to: u8,
     pub piece: Piece,
+    pub promoted_from_pawn: bool,
+}
+
+impl PartialEq for Move {
+    // ignores piece type, prommoted_from_pawn flag in match
+    fn eq(&self, other: &Self) -> bool {
+        self.from == other.from && self.to == other.to && self.piece.color() == other.piece.color()
+    }
 }
 
 pub fn valid_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
@@ -90,6 +98,7 @@ pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
             from,
             to: target as u8,
             piece,
+            promoted_from_pawn: false,
         });
     }
     moves
@@ -131,6 +140,7 @@ pub fn valid_bishop_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
                     from,
                     to: target as u8,
                     piece,
+                    promoted_from_pawn: false,
                 });
                 break;
             }
@@ -138,6 +148,7 @@ pub fn valid_bishop_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
                 from,
                 to: target as u8,
                 piece,
+                promoted_from_pawn: false,
             });
         }
     }
@@ -178,6 +189,7 @@ pub fn valid_rook_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
                     from,
                     to: target as u8,
                     piece,
+                    promoted_from_pawn: false,
                 });
                 break;
             }
@@ -185,6 +197,7 @@ pub fn valid_rook_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
                 from,
                 to: target as u8,
                 piece,
+                promoted_from_pawn: false,
             });
         }
     }
@@ -212,70 +225,91 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
     let from_col = (from % 8) as i8;
 
     let forward1 = from as i8 + dir;
-    if forward1 >= 0 && forward1 < 64 {
-        let spotlight = 1u64 << forward1;
-        if (position.bb_sides[0].0 & spotlight == 0) && (position.bb_sides[1].0 & spotlight == 0) {
-            if is_pawn_promotion(forward1 as u8, piece) {
-                //println!("Promoted! wow!");
-                for promoted_piece in valid_pawn_promotions(from, forward1 as u8, piece) {
-                    moves.push(Move {
-                        from,
-                        to: forward1 as u8,
-                        piece: promoted_piece,
-                    });
-                }
-            } else {
-                //println!("normal forward");
+    let forward1_mask = 1u64 << forward1;
+    if (position.bb_sides[0].0 & forward1_mask == 0)
+        && (position.bb_sides[1].0 & forward1_mask == 0)
+    {
+        if is_pawn_promotion(forward1 as u8, piece) {
+            for promoted_piece in valid_pawn_promotions(from, forward1 as u8, piece) {
                 moves.push(Move {
                     from,
                     to: forward1 as u8,
-                    piece,
+                    piece: promoted_piece,
+                    promoted_from_pawn: true,
                 });
             }
+        } else {
+            moves.push(Move {
+                from,
+                to: forward1 as u8,
+                piece,
+                promoted_from_pawn: false,
+            });
+        }
 
-            // 2-squares forward from starting row
-            if from_row == start_row {
-                let forward2 = forward1 + dir; // i.e. dir+dir
-                if forward2 >= 0 && forward2 < 64 {
-                    let spotlight2 = 1u64 << forward2;
-                    if (position.bb_sides[0].0 & spotlight2 == 0) && (position.bb_sides[1].0 & spotlight2 == 0) {
-                        moves.push(Move { from, to: forward2 as u8, piece });
-                    }
+        // 2-squares forward from starting row
+        if from_row == start_row {
+            let forward2 = forward1 + dir;
+            let forward2_mask = 1u64 << forward2;
+            if (position.bb_sides[0].0 & forward2_mask == 0)
+                && (position.bb_sides[1].0 & forward2_mask == 0)
+            {
+                // **also check intermediate square is empty**
+                if (position.bb_sides[0].0 & forward1_mask == 0)
+                    && (position.bb_sides[1].0 & forward1_mask == 0)
+                {
+                    moves.push(Move {
+                        from,
+                        to: forward2 as u8,
+                        piece,
+                        promoted_from_pawn: false,
+                    });
                 }
             }
         }
     }
-    // Captures
+    // diagonal moves
     for &diag in &[dir - 1, dir + 1] {
         let target = from as i8 + diag;
         if target < 0 || target > 63 {
             continue;
         }
-
-        let target_col = (target % 8) as i8;
-        // cannot wrap around horizontally
+        let target_col = target % 8;
         if (target_col - from_col).abs() != 1 {
             continue;
         }
 
-        let spotlight = 1u64 << target;
-        //println!("Enemy spotlight: {:064b}", spotlight);
-        if (position.bb_sides[enemy_index].0 & spotlight) != 0 {
-            //println!("There's an enemy!! aaa");
+        let target_mask = 1u64 << target;
+        if (position.bb_sides[enemy_index].0 & target_mask != 0)
+            || Some(target as u8) == position.en_passant
+        {
             if is_pawn_promotion(target as u8, piece) {
-                //println!("capture AND promotion. thats crazy");
-                // använda .extend istället -> kräver omskriv av valid_pawn prom
-                for promoted_piece in valid_pawn_promotions(from, forward1 as u8, piece) {
+                for promoted_piece in valid_pawn_promotions(from, target as u8, piece) {
                     moves.push(Move {
                         from,
-                        to: forward1 as u8,
+                        to: target as u8,
                         piece: promoted_piece,
+                        promoted_from_pawn: true,
                     });
                 }
-            } 
-            else {
-                //println!("normal capture");
-                moves.push(Move { from, to: target as u8, piece });
+            } else {
+                moves.push(Move {
+                    from,
+                    to: target as u8,
+                    piece,
+                    promoted_from_pawn: false,
+                });
+            }
+        }
+        // en passant square check
+        if let Some(ep_square) = position.en_passant {
+            if ep_square as i8 == target {
+                moves.push(Move {
+                    from,
+                    to: target as u8,
+                    piece,
+                    promoted_from_pawn: false,
+                });
             }
         }
         // indicating in move that move is a capture?
@@ -322,7 +356,12 @@ pub fn valid_king_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
             continue;
         }
 
-        moves.push(Move { from, to: target as u8, piece } );
+        moves.push(Move {
+            from,
+            to: target as u8,
+            piece,
+            promoted_from_pawn: false,
+        });
     }
     moves.extend(castling_moves(from, piece, position));
     moves
