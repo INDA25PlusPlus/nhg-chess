@@ -1,6 +1,18 @@
 nu ska vi schacka loss 💃
 https://doc.rust-lang.org/reference/comments.html
 
+# to do (in order of priority)
+- [ ] initialize_board (#9)
+- [ ] add game status struct for ending the game (#13)
+- [ ] flags for king, rook, and pawns that moved 2 squares (performant way to store?) (#12)
+- [ ] then, special moves: castling, en passant (#12)
+- [ ] make test.rs with perft tests (?)/tests listed in test.md (#7)
+extra (ish)
+- [ ] ensure no "non lib" elements are in the lib 
+- [ ] bit/coordinate exchange function
+- [ ] modularize checks for color/piece which is repeated all over the code (#8)
+- [ ] merge sliding piece functions into one (that is, rook, bishop and queen) which varies by offsets
+
 # bibblans flöde
 1. spelaren matar ett coord. (i nuläget bit). *get_piece_at* svarar med om det finns en pjäs där; om ja, ger den vilken typ.
 2. med *select_piece* kan spelaren välja en pjäs. inom den funktionen ->
