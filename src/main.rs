@@ -1,5 +1,5 @@
 // name of library is defined in cargo.toml
-use chess::{moves::Move, *};
+use chess::*;
 
 fn main() {
     // ---------------initializing s
@@ -7,9 +7,10 @@ fn main() {
         bb_sides: [BitBoard(0), BitBoard(1)],
         bb_pieces: [[BitBoard(0); 6]; 2],
     };
-    position.bb_pieces[Sides::WHITE][Pieces::ROOK] = BitBoard(1 << 0);  
-    position.bb_pieces[Sides::WHITE][Pieces::QUEEN] = BitBoard((1 << 45) | (1 << 56)); 
+    //position.bb_pieces[Sides::WHITE][Pieces::ROOK] = BitBoard(1 << 0);  
+    position.bb_pieces[Sides::WHITE][Pieces::QUEEN] = BitBoard(1 << 45 | 1 << 0 ); 
     position.bb_pieces[Sides::BLACK][Pieces::KING] = BitBoard(1 << 63);
+    position.bb_pieces[Sides::BLACK][Pieces::ROOK] = BitBoard(1 << 9);
 
     position.bb_sides[Sides::WHITE].0 = position.bb_pieces[Sides::WHITE]
         .iter()
@@ -24,8 +25,13 @@ fn main() {
     println!("Board Before move:");
     print_debug_board(&game.position);
 
-    execute_move(&mut game, 1, 7);
-    execute_move(&mut game, 0, 7);
+    execute_move(&mut game, 1, 7); // white picks invalid move
+    execute_move(&mut game, 0, 7); // white tries again and succeeds
+    execute_move(&mut game, 9, 15); // black plays
+    execute_move(&mut game, 7, 15); 
+    execute_move(&mut game, 63, 55); // black attempts illegal king move (would result in check)
+    execute_move(&mut game, 63, 62); 
+    execute_move(&mut game, 15, 43); 
 }
 
 /// Find index of the move that goes to `to_square`.
@@ -52,11 +58,11 @@ fn execute_move(game: &mut Game, from_square: u8, to_square: u8) {
             if let Some(idx) = find_move_to(&moves, to_square) {
                 let chosen_move = moves[idx];
                 println!("Choosing move index {} -> {:?}", idx, chosen_move);
-                match make_move(chosen_move, &mut game.position) {
+                // just hnd over game and then let make_mvoe call position?
+                match make_move(chosen_move, game) {
                     Ok(()) => {
                         println!("After move:");
                         print_debug_board(&game.position);
-                        game.turn_tracker();
                     }
                     Err(e) => println!("Move failed: {}", e),
                 }

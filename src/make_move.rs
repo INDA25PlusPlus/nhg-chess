@@ -1,6 +1,7 @@
 use crate::moves::{Move, valid_moves};
 use crate::piece::{Color, Piece};
 use crate::position::{Pieces, Position, Sides};
+use crate::game::Game;
 
 // see: https://www.chessprogramming.org/Bitboard_Serialization
 
@@ -8,7 +9,8 @@ use crate::position::{Pieces, Position, Sides};
 /// - rejects moves that are not in `valid_moves`
 /// - rejects moves that would leave the mover's own king in check
 /// - else, commits the move and prints if the enemy king is in check
-pub fn make_move(m: Move, position: &mut Position) -> Result<(), String> {
+pub fn make_move(m: Move, game: &mut Game) -> Result<(), String> {
+    let position = &mut game.position;
     let valid = valid_moves(m.from, m.piece, position);
     if !valid.contains(&m) {
         return Err("Illegal move (not in generated valid moves)".to_string());
@@ -29,6 +31,7 @@ pub fn make_move(m: Move, position: &mut Position) -> Result<(), String> {
         Color::White => Color::Black,
         Color::Black => Color::White,
     };
+    
     if is_checked(enemy_color, position) {
         println!("----> !! {:?} king is in check !!", enemy_color);
     }
@@ -37,7 +40,7 @@ pub fn make_move(m: Move, position: &mut Position) -> Result<(), String> {
     } else if is_stalemated(enemy_color, &position) {
         println!("Stalemate! It's a draw.");
     }
-
+    game.turn_tracker();
     Ok(())
 }
 
@@ -171,7 +174,7 @@ pub fn legal_moves(color: Color, position: &Position) -> Vec<Move> {
 }
 
 pub fn is_checkmated(color: Color, position: &Position) -> bool {
-    println!("Legal moves: {:?}", legal_moves(color, position));
+    //println!("Legal moves: {:?}", legal_moves(color, position));
     is_checked(color, position) && legal_moves(color, position).is_empty()
 }
 
