@@ -1,6 +1,7 @@
 use crate::piece::{Color, Piece};
 use crate::position::{Position};
 use crate::special_moves::{is_pawn_promotion, valid_pawn_promotions};
+use crate::make_move::{apply_move_unchecked, is_checked};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Move {
@@ -20,7 +21,8 @@ pub fn valid_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     }
 }
 
-/// Get index of BitBoard side (bb_sides), where 0 indicates White, and 1 indicates Black.
+// this methodology changes all the time CLEAN IT UPPPPPPPPPPPPPPPPPPP
+/// Get index of BitBoard side (bb_sides); first "friendly" then "enemy", where 0 indicates White, and 1 indicates Black.
 pub fn piece_indexes(piece: Piece) -> (usize, usize) {
     match piece {
         Piece::Bishop(Color::White)
@@ -53,7 +55,7 @@ pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
         let target = from as i8 + offset;
 
         // stay inside board
-        if target < 0 || target >= 63 {
+        if target < 0 || target > 63 {
             continue;
         }
 
@@ -154,7 +156,7 @@ pub fn valid_rook_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
 
         loop {
             target += dir;
-            if target < 0 || target >= 63 {
+            if target < 0 || target > 63 {
                 break;
             }
 
@@ -247,7 +249,7 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
     // Captures
     for &diag in &[dir - 1, dir + 1] {
         let target = from as i8 + diag;
-        if target < 0 || target >= 63 {
+        if target < 0 || target > 63 {
             continue;
         }
 
@@ -294,7 +296,7 @@ pub fn valid_king_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
     for &dir in &directions {
         let target = from as i8 + dir;
 
-        if target < 0 || target >= 63 {
+        if target < 0 || target > 63 {
             continue;
         }
 
@@ -320,12 +322,14 @@ pub fn valid_king_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
             continue;
         }
 
-        // enemy or empty: both valid
-        moves.push(Move {
-            from,
-            to: target as u8,
-            piece,
-        });
+        let mut test_pos = position.clone();
+        let m = Move { from, to: target as u8, piece };
+        apply_move_unchecked(m, &mut test_pos);
+
+        // only accept if the king is NOT in check
+        if !is_checked(piece.color(), &test_pos) {
+            moves.push(m);
+        }
     }
 
     moves

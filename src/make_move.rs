@@ -1,6 +1,6 @@
-use crate::position::{Position, Sides, Pieces};
-use crate::piece::{Color, Piece};
 use crate::moves::{Move, valid_moves};
+use crate::piece::{Color, Piece};
+use crate::position::{Pieces, Position, Sides};
 
 // see: https://www.chessprogramming.org/Bitboard_Serialization
 
@@ -15,7 +15,7 @@ pub fn make_move(m: Move, position: &mut Position) -> Result<(), String> {
     }
 
     // simulate on a clone to check if this move leaves current player's king in check
-    let mut test_pos = position.clone(); 
+    let mut test_pos = position.clone();
     apply_move_unchecked(m, &mut test_pos);
     if is_checked(m.piece.color(), &test_pos) {
         return Err("Illegal move: would leave your king in check".to_string());
@@ -32,12 +32,17 @@ pub fn make_move(m: Move, position: &mut Position) -> Result<(), String> {
     if is_checked(enemy_color, position) {
         println!("----> !! {:?} king is in check !!", enemy_color);
     }
+    if is_checkmated(enemy_color, &position) {
+        println!("{:?} is checkmated. Game over!", enemy_color);
+    } else if is_stalemated(enemy_color, &position) {
+        println!("Stalemate! It's a draw.");
+    }
 
     Ok(())
 }
 
 /// Apply the move to `position` (across bitboards)
-fn apply_move_unchecked(m: Move, position: &mut Position) {
+pub fn apply_move_unchecked(m: Move, position: &mut Position) {
     let color = m.piece.color();
     let friendly_index = match color {
         Color::White => Sides::WHITE,
@@ -50,18 +55,18 @@ fn apply_move_unchecked(m: Move, position: &mut Position) {
     };
 
     let from_mask: u64 = 1u64 << m.from;
-    let to_mask:   u64 = 1u64 << m.to;
+    let to_mask: u64 = 1u64 << m.to;
 
     let piece_index = match m.piece {
-        Piece::Pawn(_)   => Pieces::PAWN,
+        Piece::Pawn(_) => Pieces::PAWN,
         Piece::Knight(_) => Pieces::KNIGHT,
         Piece::Bishop(_) => Pieces::BISHOP,
-        Piece::Rook(_)   => Pieces::ROOK,
-        Piece::Queen(_)  => Pieces::QUEEN,
-        Piece::King(_)   => Pieces::KING,
+        Piece::Rook(_) => Pieces::ROOK,
+        Piece::Queen(_) => Pieces::QUEEN,
+        Piece::King(_) => Pieces::KING,
     };
 
-    // remove piece from the 'from' square in both friendly SIDE & PIECE LAYER 
+    // remove piece from the 'from' square in both friendly SIDE & PIECE LAYER
     position.bb_sides[friendly_index].0 &= !from_mask;
     position.bb_pieces[friendly_index][piece_index].0 &= !from_mask;
 
@@ -108,12 +113,12 @@ pub fn is_checked(color: Color, position: &Position) -> bool {
             bb &= bb - 1; // pop least significant bit
 
             let piece = match piece_type {
-                Pieces::PAWN   => Piece::Pawn(enemy_color),
+                Pieces::PAWN => Piece::Pawn(enemy_color),
                 Pieces::KNIGHT => Piece::Knight(enemy_color),
                 Pieces::BISHOP => Piece::Bishop(enemy_color),
-                Pieces::ROOK   => Piece::Rook(enemy_color),
-                Pieces::QUEEN  => Piece::Queen(enemy_color),
-                Pieces::KING   => Piece::King(enemy_color),
+                Pieces::ROOK => Piece::Rook(enemy_color),
+                Pieces::QUEEN => Piece::Queen(enemy_color),
+                Pieces::KING => Piece::King(enemy_color),
                 _ => unreachable!(),
             };
 
@@ -125,4 +130,51 @@ pub fn is_checked(color: Color, position: &Position) -> bool {
     }
 
     false
+}
+
+pub fn legal_moves(color: Color, position: &Position) -> Vec<Move> {
+    let mut result = Vec::new();
+
+    // find all friendly pieces
+    let side_index = match color {
+        Color::White => Sides::WHITE,
+        Color::Black => Sides::BLACK,
+    };
+
+    for piece_type in 0..6 {
+        let mut bb = position.bb_pieces[side_index][piece_type].0;
+        while bb != 0 {
+            let from = bb.trailing_zeros() as u8;
+            bb &= bb - 1;
+
+            let piece = match piece_type {
+                Pieces::PAWN => Piece::Pawn(color),
+                Pieces::KNIGHT => Piece::Knight(color),
+                Pieces::BISHOP => Piece::Bishop(color),
+                Pieces::ROOK => Piece::Rook(color),
+                Pieces::QUEEN => Piece::Queen(color),
+                Pieces::KING => Piece::King(color),
+                _ => unreachable!(),
+            };
+
+            for m in valid_moves(from, piece, position) {
+                // simulate to check legality
+                let mut test_pos = position.clone();
+                apply_move_unchecked(m, &mut test_pos);
+                if !is_checked(color, &test_pos) {
+                    result.push(m);
+                }
+            }
+        }
+    }
+    result
+}
+
+pub fn is_checkmated(color: Color, position: &Position) -> bool {
+    println!("Legal moves: {:?}", legal_moves(color, position));
+    is_checked(color, position) && legal_moves(color, position).is_empty()
+}
+
+pub fn is_stalemated(color: Color, position: &Position) -> bool {
+    !is_checked(color, position) && legal_moves(color, position).is_empty()
 }
