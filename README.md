@@ -2,8 +2,8 @@ nu ska vi schacka loss 💃
 https://doc.rust-lang.org/reference/comments.html
 
 # to do (in order of priority)
-- [ ] initialize_board (#9)
-- [ ] add game status struct for ending the game (#13)
+- [X] initialize_board (#9)
+- [X] add game status struct for ending the game (#13)
 - [ ] flags for king, rook, and pawns that moved 2 squares (performant way to store?) (#12)
 - [ ] then, special moves: castling, en passant (#12)
 - [ ] make test.rs with perft tests (?)/tests listed in test.md (#7)
