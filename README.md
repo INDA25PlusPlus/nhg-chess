@@ -13,6 +13,10 @@ built on bitboards. generates valid moves. *makes* moves. has *special* moves li
 - `helper` - utility functions like `initialize_board`, `index_to_square`, `square_to_index` and `print_debug_board`
 
 ## Using the Library
+To import the library, use:
+```rust
+use chess::*
+```
 The basic flow of usage is:
 1. Initalizing the board;
 ```rust
