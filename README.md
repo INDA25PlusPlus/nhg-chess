@@ -1,6 +1,8 @@
 chess? in rust? *rusty* chess? yup! 
 
 built on bitboards. generates valid moves. *makes* moves. has *special* moves like en passant and castling. yum!
+## Note
+To read more in-depth documentation, see `target/doc/chess/index.html`.
 
 ## Modules
 - `piece` - piece types (pawn, rook, knight, bishop, queen, king) and colors (white, black)
