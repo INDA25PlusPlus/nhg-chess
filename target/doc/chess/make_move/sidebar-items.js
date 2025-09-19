@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["apply_move_unchecked","is_checked","is_checkmated","is_stalemated","legal_moves","make_move","update_castling_rights"]};

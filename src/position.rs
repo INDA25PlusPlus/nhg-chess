@@ -3,25 +3,40 @@ use crate::piece::{Piece, Color, CastlingRights};
 
 // is copy needed? idk. added for debug
 
-/// Represents the "depth" or "layers" of the bitboard. A "side" then is the color (white side, black side).
+/// Represents the state of the chessboard using bitboards.
+///
+/// A [`Position`] stores which squares are occupied by which side and piece types,
+/// along with castling rights and en passant information.
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub struct Position{
-    //>>>>  NOTEEEE remove pub after testingg (???)
-
-    /// Shows all the occupied positions given a color, irregardless of piece type. (A queen is represented the same as a pawn)
+    /// Bitboards for all occupied squares, separated by side.
+    ///
+    /// Index `0`: White pieces, index `1`: Black pieces.  
+    /// This does not differentiate by piece type (a pawn and queen are treated equally).
     pub bb_sides: [BitBoard; 2],
-    /// Shows the positions of each piece-color combination, i.e. the location of White Rook (if any).
+    /// Bitboards for each piece type, separated by side.
+    ///
+    /// Accessed as `bb_pieces[side][piece_type]`.  
+    /// For example, `bb_pieces[Sides::WHITE][Pieces::ROOK]` gives the bitboard
+    /// for White’s rooks.
     pub bb_pieces: [[BitBoard; 6]; 2],
     pub castling_rights: CastlingRights,
+    /// The en passant target square, if available.
+    ///
+    /// If `Some(u8)`, it is the square index (0–63, where 0 = A1, 63 = H8).  
+    /// If `None`, no en passant is available.
     pub en_passant: Option<u8>, // None or bit position
 }
-
+/// Constants representing the two sides in a chess game.
 pub struct Sides;
 impl Sides {
     pub const WHITE: usize = 0;
     pub const BLACK: usize = 1;
 }
 
+/// Constants representing the piece types.
+///
+/// Indexed as `0..=5`, corresponding to pawn -> king.
 pub struct Pieces;
 impl Pieces{
     pub const PAWN: usize = 0;
@@ -39,14 +54,19 @@ Piece BitBoard:         0b0001000000001
 AND result:             0b0001000000000 =! 0    -> square has a piece 
 */
 
-/// Gets the existence, type and color of a piece given a position expressed as a bit-index (0-63), where 0 is A1 and 63 is H8.
-/// Expresses the desired bit-index as a hex (mask). The mask (called "spotlight") is compared to the BitBoards of the pieces for each color and type using AND
-/// If the mask matches one of the boards (bb_pieces), it matches the equivalent BitBoard to associated Piece. 
-/// 
-/// Example Functionality (Bitmasking): \
-/// Piece BitBoard:         0b0001000000001\
-/// "Spotlight"" for D4:    0b0001000000000\
-/// AND result:             0b0001000000000 =! 0    -> square has a piece 
+/// Returns the piece (if any) at a given square in the [`Position`].
+///
+/// # Arguments
+///
+/// * `position` — The chess position to query.
+/// * `square` — A square index in the range `0..=63`, where:
+///   - `0` = A1  
+///   - `63` = H8
+///
+/// # Returns
+///
+/// * `Some(Piece)` if a piece is found at the given square.
+/// * `None` if the square is empty.
 pub fn get_piece_at(position: &Position, square: u8) -> Option<Piece> {
     let spotlight = 1u64 << square; 
     //println!("spotlight: {:064b}", spotlight);

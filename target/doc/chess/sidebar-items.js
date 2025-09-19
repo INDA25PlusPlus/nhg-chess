@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["bitboard","game","helper","make_move","moves","piece","position","special_moves"]};

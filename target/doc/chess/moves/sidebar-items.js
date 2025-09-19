@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["piece_indexes","valid_bishop_moves","valid_king_moves","valid_knight_moves","valid_moves","valid_pawn_moves","valid_queen_moves","valid_rook_moves"],"struct":["Move"]};

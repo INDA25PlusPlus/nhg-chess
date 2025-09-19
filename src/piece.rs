@@ -12,8 +12,8 @@ pub enum Color {
     White,
     Black,
 }
-/// "Converts" Piece to Color by matching it with a color. Returns Color.
 impl Piece {
+    /// Returns the color of the piece.
     pub fn color(&self) -> Color {
         match self {
             Piece::Pawn(c)
@@ -37,6 +37,7 @@ pub struct CastlingRights {
     pub black_queenside_rook_moved: bool,
 }
 impl CastlingRights {
+    /// Creates a new `CastlingRights` with all rights available (no king or rook has moved).
     pub fn new() -> Self {
         Self {
             white_king_moved: false,

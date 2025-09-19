@@ -5,10 +5,25 @@ use crate::position::{Pieces, Position, Sides};
 
 // see: https://www.chessprogramming.org/Bitboard_Serialization
 
-/// Attempt and validate a move.
-/// - rejects moves that are not in `valid_moves`
-/// - rejects moves that would leave the mover's own king in check
-/// - else, commits the move and prints if the enemy king is in check
+/// Attempts to make a move in the given game.
+///
+/// # Behavior
+/// - Rejects moves not found in [`valid_moves`].
+/// - Rejects moves that would leave the mover’s own king in check.
+/// - Otherwise, commits the move to the game state.
+/// - Updates castling rights and en passant.
+/// - Prints if the enemy king is in check, checkmate, or stalemate.
+/// - Advances the turn if the game is not over.
+///
+/// # Arguments
+/// * `m` - The move to attempt.
+/// * `game` - The mutable game state to apply the move to.
+///
+/// # Errors
+/// Returns `Err(String)` if the move is illegal.
+///
+/// # Returns
+/// `Ok(())` if the move was applied successfully.
 pub fn make_move(m: Move, game: &mut Game) -> Result<(), String> {
     let position = &mut game.position;
     let valid = valid_moves(m.from, m.piece, position);
@@ -50,6 +65,13 @@ pub fn make_move(m: Move, game: &mut Game) -> Result<(), String> {
     Ok(())
 }
 
+/// Updates castling rights in the given position after a move.
+///
+/// Castling rights are revoked when a king or rook moves from its initial square.
+///
+/// # Arguments
+/// * `m` - The move to check.
+/// * `position` - The mutable board state to update.
 fn update_castling_rights(m: Move, position: &mut Position) {
     match m.piece {
         Piece::King(Color::White) => position.castling_rights.white_king_moved = true,
@@ -74,7 +96,14 @@ fn update_castling_rights(m: Move, position: &mut Position) {
     }
 }
 
-/// Apply the move to `position` (across bitboards)
+/// Applies a move directly to the given position without legality checks.
+///
+/// This function updates side and piece bitboards, handles captures,
+/// castling, promotions, and en passant.
+///
+/// # Arguments
+/// * `m` - The move to apply.
+/// * `position` - The mutable board state to update.
 pub fn apply_move_unchecked(m: Move, position: &mut Position) {
     let color = m.piece.color();
     let friendly_index = match color {
@@ -190,7 +219,17 @@ pub fn apply_move_unchecked(m: Move, position: &mut Position) {
     position.bb_pieces[friendly_index][piece_index].0 |= to_mask;
 }
 
-/// Return true if `color`'s king is currently attacked (i.e. in check).
+/// Returns `true` if the given color’s king is in check.
+///
+/// A king is considered checked if any opposing piece
+/// has a legal attack on its square.
+///
+/// # Arguments
+/// * `color` - The side to check for.
+/// * `position` - The board state.
+///
+/// # Returns
+/// `true` if the king is attacked, otherwise `false`.
 pub fn is_checked(color: Color, position: &Position) -> bool {
     //println!("checking on the {:?} king! you alright?", color);
     let (friendly_index, enemy_index) = match color {
@@ -235,6 +274,17 @@ pub fn is_checked(color: Color, position: &Position) -> bool {
     false
 }
 
+/// Generates all legal moves for the given color.
+///
+/// Pseudo-legal moves are generated with [`valid_moves`],
+/// then filtered to exclude moves that leave the king in check.
+///
+/// # Arguments
+/// * `color` - The side to generate moves for.
+/// * `position` - The board state.
+///
+/// # Returns
+/// A vector of all legal moves available to `color`.
 pub fn legal_moves(color: Color, position: &Position) -> Vec<Move> {
     let mut result = Vec::new();
 
@@ -275,11 +325,26 @@ pub fn legal_moves(color: Color, position: &Position) -> Vec<Move> {
     result
 }
 
+/// Returns `true` if the given color is checkmated.
+///
+/// A side is checkmated if its king is in check and it has no legal moves.
+///
+/// # Arguments
+/// * `color` - The side to test.
+/// * `position` - The board state.
 pub fn is_checkmated(color: Color, position: &Position) -> bool {
     //println!("Legal moves: {:?}", legal_moves(color, position));
     is_checked(color, position) && legal_moves(color, position).is_empty()
 }
 
+
+/// Returns `true` if the given color is stalemated.
+///
+/// A side is stalemated if its king is not in check and it has no legal moves.
+///
+/// # Arguments
+/// * `color` - The side to test.
+/// * `position` - The board state.
 pub fn is_stalemated(color: Color, position: &Position) -> bool {
     !is_checked(color, position) && legal_moves(color, position).is_empty()
 }

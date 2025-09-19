@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["index_to_square","initialize_board","print_debug_board","square_to_index"]};

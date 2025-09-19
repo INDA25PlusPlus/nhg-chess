@@ -2,21 +2,39 @@ use crate::piece::{Color, Piece};
 use crate::position::Position;
 use crate::special_moves::{castling_moves, is_pawn_promotion, valid_pawn_promotions};
 
+/// Represents a chess move on the board.
 #[derive(Debug, Clone, Copy, Eq)]
 pub struct Move {
+    /// The starting square index (0–63).
     pub from: u8,
+    /// The target square index (0–63).
     pub to: u8,
+    /// The piece being moved (including color).
     pub piece: Piece,
+    /// Whether this move resulted from a pawn promotion.
     pub promoted_from_pawn: bool,
 }
 
 impl PartialEq for Move {
-    // ignores piece type, prommoted_from_pawn flag in match
+    /// Equality ignores the piece type and promotion flag.
+    /// Only `from`, `to`, and `piece.color()` must match.
     fn eq(&self, other: &Self) -> bool {
         self.from == other.from && self.to == other.to && self.piece.color() == other.piece.color()
     }
 }
 
+/// Returns all pseudo-legal moves for the given piece on the given square.
+///
+/// Delegates to the appropriate move generator based on the piece type.
+/// Does not check for king safety.
+///
+/// # Arguments
+/// * `from` - The square index (0–63) of the piece.
+/// * `piece` - The piece being moved.
+/// * `position` - Current board state.
+///
+/// # Returns
+/// A vector of pseudo-legal moves.
 pub fn valid_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     match piece {
         Piece::Knight(_) => valid_knight_moves(from, piece, position),
@@ -28,8 +46,18 @@ pub fn valid_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     }
 }
 
-// this methodology changes all the time CLEAN IT UPPPPPPPPPPPPPPPPPPP
-/// Get index of BitBoard side (bb_sides); first "friendly" then "enemy", where 0 indicates White, and 1 indicates Black.
+
+/// Returns side indices for a piece.
+///
+/// The board maintains bitboards for each side.  
+/// This helper returns `(friendly_index, enemy_index)` as `(0,1)` if the piece is white,
+/// and `(1,0)` if the piece is black.
+///
+/// # Arguments
+/// * `piece` - The piece being checked.
+///
+/// # Returns
+/// Tuple `(friendly_index, enemy_index)`.
 pub fn piece_indexes(piece: Piece) -> (usize, usize) {
     match piece {
         Piece::Bishop(Color::White)
@@ -48,6 +76,10 @@ pub fn piece_indexes(piece: Piece) -> (usize, usize) {
     }
 }
 
+/// Generates pseudo-legal knight moves from a square.
+///
+/// Knights can jump over pieces.  
+/// This function checks board boundaries and excludes landing on friendly pieces.
 pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     // see knight-offset.jpg
     let knight_offsets: [i8; 8] = [17, 15, 10, 6, -17, -15, -10, -6];
@@ -104,7 +136,10 @@ pub fn valid_knight_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
     moves
 }
 
-// representing a large RANGE of moves such as this?
+/// Generates pseudo-legal bishop moves from a square.
+///
+/// Bishops move diagonally until blocked.  
+/// Captures are included, but the ray stops at the first blocking piece.
 pub fn valid_bishop_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     let mut moves = Vec::new();
 
@@ -155,6 +190,10 @@ pub fn valid_bishop_moves(from: u8, piece: Piece, position: &Position) -> Vec<Mo
     moves
 }
 
+/// Generates pseudo-legal rook moves from a square.
+///
+/// Rooks move horizontally and vertically until blocked.  
+/// Captures are included, but the ray stops at the first blocking piece.
 pub fn valid_rook_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     let mut moves = Vec::new();
 
@@ -204,12 +243,23 @@ pub fn valid_rook_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
     moves
 }
 
+/// Generates pseudo-legal queen moves from a square.
+///
+/// Queens combine rook and bishop moves.
 pub fn valid_queen_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     let mut moves = valid_rook_moves(from, piece, position);
     moves.extend(valid_bishop_moves(from, piece, position));
     moves
 }
 
+
+/// Generates pseudo-legal pawn moves from a square.
+///
+/// Handles:
+/// - Single and double forward pushes
+/// - Diagonal captures
+/// - En passant captures
+/// - Promotions at the last rank
 pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     let mut moves = Vec::new();
 
@@ -230,7 +280,7 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
         && (position.bb_sides[1].0 & forward1_mask == 0)
     {
         if is_pawn_promotion(forward1 as u8, piece) {
-            for promoted_piece in valid_pawn_promotions(from, forward1 as u8, piece) {
+            for promoted_piece in valid_pawn_promotions(piece) {
                 moves.push(Move {
                     from,
                     to: forward1 as u8,
@@ -284,7 +334,7 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
             || Some(target as u8) == position.en_passant
         {
             if is_pawn_promotion(target as u8, piece) {
-                for promoted_piece in valid_pawn_promotions(from, target as u8, piece) {
+                for promoted_piece in valid_pawn_promotions(piece) {
                     moves.push(Move {
                         from,
                         to: target as u8,
@@ -317,7 +367,14 @@ pub fn valid_pawn_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move
     moves
 }
 
-/// Genereates PSEUDO legal moves for the king. i.e. does not check for moves that leaves in chekc
+/// Generates pseudo-legal king moves from a square.
+///
+/// Handles:
+/// - Single-square king moves in all directions
+/// - Excludes moves landing on friendly pieces
+/// - Adds possible castling moves via [`castling_moves`]
+///
+/// Does not check for moving into check.
 pub fn valid_king_moves(from: u8, piece: Piece, position: &Position) -> Vec<Move> {
     let mut moves = Vec::new();
 

@@ -3,6 +3,16 @@ use crate::position::Position;
 use crate::bitboard::BitBoard;
 use crate::position::{Pieces, Sides};
 
+/// Initializes a chessboard to the standard starting position.
+///
+/// - Places all pawns, rooks, knights, bishops, queens, and kings
+///   for both White and Black.
+/// - Fills in the side masks (`bb_sides`) by OR-ing all piece bitboards.
+/// - Castling rights are set to the default (none of the pieces have moved).
+/// - No en passant target square is set initially.
+///
+/// Returns:
+/// - A [`Position`] struct representing the standard starting chessboard.
 pub fn initialize_board() -> Position {
     let mut position = Position {
         bb_sides: [BitBoard(0), BitBoard(0)],
@@ -75,8 +85,23 @@ pub fn square_to_index(square: &str) -> Option<u8> {
     Some(rank_idx * 8 + file_idx)
 }
 
-/// Prints the state of the board with all sides.
-/// Made up of numbers chess notation (A1...H8) and letters (where "WP" = "White Pawn" and "BN" = "Black Knight")
+/// Prints the current board state in a human-readable format for debugging.
+///
+/// - Iterates through all 64 squares and checks if they are occupied.
+/// - If a piece is present, prints its side (`W` for White, `B` for Black)
+///   and type (`P`, `N`, `B`, `R`, `Q`, `K`). (Note: Knight -> `N`)
+/// - Squares with no pieces show their square name (e.g., `"A1"`).
+/// - Colors pieces in the terminal (White = red, Black = green).
+///
+/// Example output (truncated):
+/// ```text
+/// BR BN BB BQ BK BB BN BR 
+/// BP BP BP BP BP BP BP BP 
+/// A7 B7 C7 D7 E7 F7 G7 H7 
+/// ...
+/// WP WP WP WP WP WP WP WP 
+/// WR WN WB WQ WK WB WN WR 
+/// ```
 pub fn print_debug_board(position: &Position) {
     for row in (0..8).rev() {
         for col in 0..8 {

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["castling_moves","is_pawn_promotion","valid_pawn_promotions"]};
