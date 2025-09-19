@@ -33,3 +33,11 @@ let moves = valid_moves(from_square, piece, &game.position);
 > *Note*: It is recommended to fetch your chosen move by taking its index in the Vec<Move>, for example `let chosen_move = moves[idx]`
 5. Whether the game has ended can be checked with the `is_over()` function from Game, which returns False if it is not over, and True if it is over. If the game ends, the result can be seen via `result` in Game, which will return Checkmate(Color), where Color is the checked color, or Stalemate. 
 6. If the game has not ended, it is the opposite color's turn, to select a piece and make its move.
+## Credits
+- The entirety of the [Chess programming wiki](https://www.chessprogramming.org/Main_Page) but especially the page on [board representatin](https://www.chessprogramming.org/Board_Representation) for introducing me to BitBoards, and [Bitboard Serialization](https://www.chessprogramming.org/Bitboard_Serialization) to create `make_move`, and the page on [En passant](https://www.chessprogramming.org/En_passant) for introducing me to the idea of "the en passant square".
+- [Writing a BitBoard in Rust Pt. 1: The Basics](https://nereuxofficial.github.io/posts/bitboard-rust/) for writing the BitBoard structure I used.
+- The entirety of [Rust by Example](https://doc.rust-lang.org/rust-by-example/index.html) for teaching me Rust
+- Deepseek for giving me the idea to use fold() when combining my BitBoards. (Question used: `How could I get the reduced version of multiple bitboards in rust, using an OR operation? (i.e. a combined version) 
+Don't give me the code, but give me pointers as to what to look at / research`)
+
+- Wikipedia for various diagrams and formulations to help me understand chess. 
