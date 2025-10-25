@@ -17,7 +17,7 @@ To read more in-depth documentation, see `target/doc/chess/index.html`.
 ## Using the Library
 To import the library, use:
 ```rust
-use chess::*
+use nhg_chess::*
 ```
 The basic flow of usage is:
 1.  Initialize the **position** of all the pieces using `initialize_board()`, and create a new instance of **Game** with this position;
