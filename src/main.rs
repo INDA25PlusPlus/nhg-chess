@@ -1,5 +1,5 @@
 // name of library is defined in cargo.toml
-use chess::*;
+use nhg_chess::*;
 
 fn main() {
     let position = initialize_board();
@@ -8,6 +8,7 @@ fn main() {
     println!("Board Before move:");
     print_debug_board(&game.position);
 
+    // pawn promotoion dummy 
     let moves_str: Vec<(&str, &str)> = vec![
         ("B2", "B4"),
         ("H7","H6"),
